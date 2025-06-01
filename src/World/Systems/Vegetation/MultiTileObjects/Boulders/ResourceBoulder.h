@@ -10,8 +10,9 @@ namespace MultiTileObjects {
 namespace Boulders {
 
 /**
- * Resource Boulder - Large stone formations (5x5 to 30x30) with integrated resource veins
- * Features: Procedural rock patterns, moss growth, embedded gold/silver/iron/copper veins
+ * Resource Boulder - Large stone formations (6x6 to 30x30) with integrated resource veins
+ * Features: Natural rock patterns, moss growth, embedded gold/silver/iron/copper veins
+ * Optimized for beautiful top-down view with no visual artifacts
  */
 class ResourceBoulder : public BaseVegetationObject {
 public:
@@ -24,10 +25,10 @@ public:
     };
     
     enum class BoulderSize {
-        SMALL,      // 5x5
-        MEDIUM,     // 8x8  
-        LARGE,      // 15x15
-        MASSIVE     // 25x25+
+        SMALL,      // 6x6
+        MEDIUM,     // 10x10  
+        LARGE,      // 18x18
+        MASSIVE     // 30x30
     };
     
     ResourceBoulder(int origin_x, int origin_y, unsigned int seed, 
@@ -66,16 +67,16 @@ private:
     float sparkle_phase;           // For animated resource glints
     float moss_growth_phase;       // Moss slowly spreads over time
     
-    // Boulder generation
+    // Boulder generation - optimized for beautiful top-down view
     void determineBoulderSize();
-    void generateStoneBase();
+    void generateNaturalBoulderShape();
     void generateResourceVeins();
     void generateMossPatches();
-    void generateCracksAndTexture();
+    void addWeatheringDetails();
     
-    // Resource vein generation
-    void generateVein(int start_x, int start_y, int length, float thickness);
-    void addVeinSegment(int x, int y, float thickness);
+    // Resource vein generation  
+    void generateNaturalVein(int start_x, int start_y, float angle, int length, float thickness);
+    void addResourceDeposit(int x, int y, float thickness);
     
     // Moss generation  
     void addMossPatch(int center_x, int center_y, int radius);
@@ -85,16 +86,14 @@ private:
     void updateResourceSparkle(float time_delta);
     void updateMossGrowth(float time_delta);
     
-    // Utility methods
-    char selectStoneCharacter(int x, int y) const;
+    // Visual methods - create rich, natural appearance without artifacts
+    char selectBoulderCharacter(int x, int y, float distance_factor) const;
     char selectResourceCharacter(ResourceType type) const;
     char selectMossCharacter(int x, int y) const;
-    sf::Color getStoneColor(int x, int y) const;
+    sf::Color getBoulderForegroundColor(int x, int y, float distance_factor) const;
+    sf::Color getBoulderBackgroundColor(int x, int y, float distance_factor) const;
     sf::Color getResourceColor(ResourceType type, bool sparkling = false) const;
     sf::Color getMossColor(int x, int y) const;
-    
-    // FIXED: Add terrain background method
-    sf::Color getTerrainBackground() const;
     
     // Placement validation
     bool isValidTerrain(float height, float slope) const;

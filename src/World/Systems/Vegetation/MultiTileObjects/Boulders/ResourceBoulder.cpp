@@ -24,7 +24,6 @@ ResourceBoulder::ResourceBoulder(int origin_x, int origin_y, unsigned int seed,
     // Initialize boulder parameters
     determineBoulderSize();
     
-    // FIXED: Generate the boulder pattern immediately after construction
     generatePattern();
 }
 
@@ -35,31 +34,31 @@ void ResourceBoulder::determineBoulderSize() {
     params.size = boulder_size;
     params.resource_type = resource_type;
     
-    // Set base colors
-    params.base_stone_color = varyColor(Colors::MOSSY_BOULDER_BASE, 0.1f);
-    params.moss_color = varyColor(Colors::MOSSY_BOULDER_MOSS, 0.08f);
+    // Rich, natural stone colors that look great from above
+    params.base_stone_color = varyColor(Colors::MOSSY_BOULDER_BASE, 0.15f);
+    params.moss_color = varyColor(Colors::MOSSY_BOULDER_MOSS, 0.12f);
     
     // Resource-specific colors
     switch (resource_type) {
         case ResourceType::GOLD_VEINS:
             params.resource_color = Colors::GOLD_VEIN_GLEAM;
-            params.resource_density = 0.1f + dist(rng) * 0.1f;
-            params.vein_count = 2 + static_cast<int>(dist(rng) * 3);
+            params.resource_density = 0.15f + dist(rng) * 0.1f;  // More visible
+            params.vein_count = 3 + static_cast<int>(dist(rng) * 4);
             break;
         case ResourceType::SILVER_VEINS:
             params.resource_color = Colors::SILVER_LODE_GLEAM;
-            params.resource_density = 0.12f + dist(rng) * 0.1f;
-            params.vein_count = 2 + static_cast<int>(dist(rng) * 4);
+            params.resource_density = 0.18f + dist(rng) * 0.1f;
+            params.vein_count = 3 + static_cast<int>(dist(rng) * 5);
             break;
         case ResourceType::IRON_DEPOSITS:
             params.resource_color = Colors::IRON_ORE_METAL;
-            params.resource_density = 0.15f + dist(rng) * 0.1f;
-            params.vein_count = 3 + static_cast<int>(dist(rng) * 4);
+            params.resource_density = 0.2f + dist(rng) * 0.1f;
+            params.vein_count = 4 + static_cast<int>(dist(rng) * 5);
             break;
         case ResourceType::COPPER_DEPOSITS:
             params.resource_color = Colors::COPPER_DEPOSIT_GLEAM;
-            params.resource_density = 0.13f + dist(rng) * 0.1f;
-            params.vein_count = 2 + static_cast<int>(dist(rng) * 3);
+            params.resource_density = 0.17f + dist(rng) * 0.1f;
+            params.vein_count = 3 + static_cast<int>(dist(rng) * 4);
             break;
         default:
             params.resource_density = 0.0f;
@@ -68,47 +67,51 @@ void ResourceBoulder::determineBoulderSize() {
     }
     
     // Boulder characteristics
-    params.moss_coverage = 0.2f + dist(rng) * 0.4f;
-    params.weathering_factor = 0.3f + dist(rng) * 0.3f;
+    params.moss_coverage = 0.3f + dist(rng) * 0.4f;   // More moss for natural look
+    params.weathering_factor = 0.2f + dist(rng) * 0.3f;
 }
 
 void ResourceBoulder::generatePattern() {
-    // Clear pattern with proper terrain background
-    sf::Color terrain_bg = getTerrainBackground();
+    // Start completely clear - NO terrain background bleeding!
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
-            setTile(x, y, ' ', sf::Color::Black, terrain_bg, false, false);
+            setTile(x, y, ' ', sf::Color::Black, sf::Color::Transparent, false, false);
         }
     }
     
-    // Generate in layers
-    generateStoneBase();
+    // Generate beautiful boulder from above
+    generateNaturalBoulderShape();
     generateResourceVeins();
     generateMossPatches();
-    generateCracksAndTexture();
+    addWeatheringDetails();
 }
 
-void ResourceBoulder::generateStoneBase() {
+void ResourceBoulder::generateNaturalBoulderShape() {
     int center_x = width / 2;
     int center_y = height / 2;
-    int radius = std::min(width, height) / 2;
+    float radius = std::min(width, height) / 2.0f - 0.5f;
     
-    // Create roughly circular boulder shape
+    // Create natural, irregular boulder shape that looks great from above
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
-            float distance = std::sqrt((x - center_x) * (x - center_x) + (y - center_y) * (y - center_y));
+            float dx = x - center_x;
+            float dy = y - center_y;
+            float distance = std::sqrt(dx * dx + dy * dy);
             
-            // Add some irregularity to the shape
-            float noise = getProceduralNoise(x, y, 0.3f);
-            float effective_radius = radius * (0.8f + noise * 0.4f);
+            // Add organic irregularity for natural boulder shape
+            float angle = std::atan2(dy, dx);
+            float irregularity = std::sin(angle * 3.0f) * 0.3f + std::sin(angle * 5.0f) * 0.2f;
+            float effective_radius = radius * (0.85f + irregularity + getProceduralNoise(x, y, 0.2f) * 0.3f);
             
             if (distance <= effective_radius) {
-                char stone_char = selectStoneCharacter(x, y);
-                sf::Color stone_color = getStoneColor(x, y);
-                // FIXED: Use terrain background blended with stone color instead of pure stone
-                sf::Color bg_color = Tile::interpolateColor(getTerrainBackground(), params.base_stone_color, 0.8f);
+                // Determine boulder surface type based on distance from center
+                float distance_factor = distance / effective_radius;
                 
-                setTile(x, y, stone_char, stone_color, bg_color, true, false); // blocks movement
+                char boulder_char = selectBoulderCharacter(x, y, distance_factor);
+                sf::Color stone_fg = getBoulderForegroundColor(x, y, distance_factor);
+                sf::Color stone_bg = getBoulderBackgroundColor(x, y, distance_factor);
+                
+                setTile(x, y, boulder_char, stone_fg, stone_bg, true, false); // blocks movement
             }
         }
     }
@@ -122,55 +125,47 @@ void ResourceBoulder::generateResourceVeins() {
     std::mt19937 rng(random_seed + 1000);
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
     
+    int center_x = width / 2;
+    int center_y = height / 2;
+    
     for (int vein = 0; vein < params.vein_count; ++vein) {
-        // Start from a random edge
-        int start_x, start_y;
-        if (dist(rng) < 0.5f) {
-            start_x = (dist(rng) < 0.5f) ? 0 : width - 1;
-            start_y = static_cast<int>(dist(rng) * height);
-        } else {
-            start_x = static_cast<int>(dist(rng) * width);
-            start_y = (dist(rng) < 0.5f) ? 0 : height - 1;
-        }
+        // Create more natural vein patterns
+        float angle = (vein / static_cast<float>(params.vein_count)) * 2.0f * 3.14159f + dist(rng) * 1.0f;
+        int vein_length = 2 + static_cast<int>(dist(rng) * (std::min(width, height) / 3));
         
-        // Generate vein towards center with some randomness
-        int length = 3 + static_cast<int>(dist(rng) * (std::min(width, height) / 2));
-        float thickness = 0.8f + dist(rng) * 0.4f;
-        
-        generateVein(start_x, start_y, length, thickness);
+        generateNaturalVein(center_x, center_y, angle, vein_length, 1.0f + dist(rng) * 0.5f);
     }
 }
 
-void ResourceBoulder::generateVein(int start_x, int start_y, int length, float thickness) {
+void ResourceBoulder::generateNaturalVein(int start_x, int start_y, float angle, int length, float thickness) {
     std::mt19937 rng(random_seed + start_x * 1000 + start_y * 100);
-    std::uniform_real_distribution<float> dist(-0.3f, 0.3f);
-    
-    int center_x = width / 2;
-    int center_y = height / 2;
+    std::uniform_real_distribution<float> dist(-0.2f, 0.2f);
     
     for (int step = 0; step < length; ++step) {
         float progress = static_cast<float>(step) / length;
         
-        // Move towards center with some randomness
-        int vein_x = static_cast<int>(start_x + (center_x - start_x) * progress + dist(rng) * 2);
-        int vein_y = static_cast<int>(start_y + (center_y - start_y) * progress + dist(rng) * 2);
+        // Follow the angle with some natural wandering
+        float current_angle = angle + dist(rng) * progress;
+        int vein_x = start_x + static_cast<int>(std::cos(current_angle) * step);
+        int vein_y = start_y + static_cast<int>(std::sin(current_angle) * step);
         
         if (vein_x >= 0 && vein_x < width && vein_y >= 0 && vein_y < height) {
-            addVeinSegment(vein_x, vein_y, thickness);
+            addResourceDeposit(vein_x, vein_y, thickness * (1.0f - progress * 0.3f));
         }
     }
 }
 
-void ResourceBoulder::addVeinSegment(int x, int y, float thickness) {
-    // Only add vein to existing stone tiles
+void ResourceBoulder::addResourceDeposit(int x, int y, float thickness) {
+    // Only add resource to existing boulder tiles
     ObjectTile& tile = getTileRef(x, y);
-    if (tile.character == ' ') return; // No stone here
+    if (tile.character == ' ') return; // No boulder here
     
-    float noise = getProceduralNoise(x, y, 0.5f);
+    float noise = getProceduralNoise(x, y, 0.6f);
     if (noise < params.resource_density * thickness) {
         char resource_char = selectResourceCharacter(resource_type);
         sf::Color resource_color = getResourceColor(resource_type);
         
+        // Keep the boulder background but show resource character
         setTile(x, y, resource_char, resource_color, tile.background, true, false);
     }
 }
@@ -179,12 +174,13 @@ void ResourceBoulder::generateMossPatches() {
     std::mt19937 rng(random_seed + 2000);
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
     
-    int moss_patch_count = static_cast<int>(params.moss_coverage * width * height / 10);
+    // Create natural moss patches for organic appearance
+    int moss_patch_count = static_cast<int>(params.moss_coverage * width * height / 8);
     
     for (int patch = 0; patch < moss_patch_count; ++patch) {
         int moss_x = static_cast<int>(dist(rng) * width);
         int moss_y = static_cast<int>(dist(rng) * height);
-        int moss_radius = 1 + static_cast<int>(dist(rng) * 2);
+        int moss_radius = 1 + static_cast<int>(dist(rng) * 3);
         
         addMossPatch(moss_x, moss_y, moss_radius);
     }
@@ -196,10 +192,11 @@ void ResourceBoulder::addMossPatch(int center_x, int center_y, int radius) {
             if (x >= 0 && x < width && y >= 0 && y < height) {
                 if (shouldHaveMoss(x, y, center_x, center_y, radius)) {
                     ObjectTile& tile = getTileRef(x, y);
-                    if (tile.character != ' ') { // Only moss existing stone
+                    if (tile.character != ' ') { // Only moss existing boulder
                         char moss_char = selectMossCharacter(x, y);
                         sf::Color moss_fg = getMossColor(x, y);
                         
+                        // Apply moss while keeping boulder background
                         setTile(x, y, moss_char, moss_fg, tile.background, tile.blocks_movement, false);
                     }
                 }
@@ -210,34 +207,52 @@ void ResourceBoulder::addMossPatch(int center_x, int center_y, int radius) {
 
 bool ResourceBoulder::shouldHaveMoss(int x, int y, int center_x, int center_y, int radius) const {
     float distance = std::sqrt((x - center_x) * (x - center_x) + (y - center_y) * (y - center_y));
-    float noise = getProceduralNoise(x, y, 0.4f);
-    return distance <= radius && noise > 0.3f;
+    float noise = getProceduralNoise(x, y, 0.5f);
+    return distance <= radius && noise > 0.2f; // More lenient for natural moss
 }
 
-void ResourceBoulder::generateCracksAndTexture() {
-    // Add weathering details to existing tiles
+void ResourceBoulder::addWeatheringDetails() {
+    // Add final weathering touches for realism
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
             ObjectTile& tile = getTileRef(x, y);
             if (tile.character != ' ') {
-                float weathering_noise = getProceduralNoise(x, y, 0.6f);
-                if (weathering_noise > 0.8f) {
-                    // Add cracks or weathering
+                float weathering_noise = getProceduralNoise(x, y, 0.8f);
+                if (weathering_noise > 0.85f) {
+                    // Add weathering details
                     if (tile.character == 'O') {
-                        tile.character = (weathering_noise > 0.9f) ? '8' : 'o';
+                        tile.character = (weathering_noise > 0.92f) ? '8' : 'o';
                     }
+                    // Slightly darken weathered areas
+                    tile.background = sf::Color(
+                        static_cast<sf::Uint8>(tile.background.r * 0.9f),
+                        static_cast<sf::Uint8>(tile.background.g * 0.9f),
+                        static_cast<sf::Uint8>(tile.background.b * 0.9f)
+                    );
                 }
             }
         }
     }
 }
 
-char ResourceBoulder::selectStoneCharacter(int x, int y) const {
-    float noise = getProceduralNoise(x, y, 0.5f);
+char ResourceBoulder::selectBoulderCharacter(int x, int y, float distance_factor) const {
+    float noise = getProceduralNoise(x, y, 0.4f);
     
-    if (noise < 0.6f) return 'O';      // Solid stone
-    else if (noise < 0.8f) return 'o'; // Smaller stones
-    else return '8';                   // Weathered stone
+    // Character selection based on position and randomness for natural look
+    if (distance_factor < 0.3f) {
+        // Center of boulder - solid
+        return (noise < 0.7f) ? 'O' : '@';
+    } else if (distance_factor < 0.7f) {
+        // Mid section
+        if (noise < 0.5f) return 'O';
+        else if (noise < 0.8f) return 'o';
+        else return '8';
+    } else {
+        // Edges - more varied
+        if (noise < 0.4f) return 'o';
+        else if (noise < 0.7f) return '.';
+        else return '8';
+    }
 }
 
 char ResourceBoulder::selectResourceCharacter(ResourceType type) const {
@@ -250,12 +265,45 @@ char ResourceBoulder::selectResourceCharacter(ResourceType type) const {
     }
 }
 
-char ResourceBoulder::selectMossCharacter(int /* x */, int /* y */) const {
-    return '.'; // Simple moss character
+char ResourceBoulder::selectMossCharacter(int x, int y) const {
+    float noise = getProceduralNoise(x, y, 0.6f);
+    
+    // Variety in moss characters for natural appearance
+    if (noise < 0.4f) return '.';
+    else if (noise < 0.7f) return ',';
+    else return ';';
 }
 
-sf::Color ResourceBoulder::getStoneColor(int /* x */, int /* y */) const {
-    return varyColor(params.base_stone_color, 0.05f);
+sf::Color ResourceBoulder::getBoulderForegroundColor(int x, int y, float distance_factor) const {
+    // Create rich, varied stone colors
+    sf::Color base_stone = params.base_stone_color;
+    
+    // Add depth and variation
+    float depth_factor = 1.0f - distance_factor * 0.3f; // Center darker, edges lighter
+    float variation = getProceduralNoise(x, y, 0.3f) * 0.15f - 0.075f;
+    
+    return sf::Color(
+        static_cast<sf::Uint8>(std::max(0.0f, std::min(255.0f, base_stone.r * depth_factor * (1.0f + variation)))),
+        static_cast<sf::Uint8>(std::max(0.0f, std::min(255.0f, base_stone.g * depth_factor * (1.0f + variation)))),
+        static_cast<sf::Uint8>(std::max(0.0f, std::min(255.0f, base_stone.b * depth_factor * (1.0f + variation))))
+    );
+}
+
+sf::Color ResourceBoulder::getBoulderBackgroundColor(int x, int y, float distance_factor) const {
+    // Rich boulder background colors - NO terrain bleeding!
+    sf::Color deep_stone = sf::Color(60, 55, 50);    // Deep stone interior
+    sf::Color light_stone = sf::Color(95, 88, 80);   // Lighter stone surface
+    
+    // Blend based on position for natural depth
+    sf::Color base_bg = Tile::interpolateColor(deep_stone, light_stone, distance_factor);
+    
+    // Add subtle variation
+    float variation = getProceduralNoise(x, y, 0.4f) * 0.1f - 0.05f;
+    return sf::Color(
+        static_cast<sf::Uint8>(std::max(0.0f, std::min(255.0f, base_bg.r * (1.0f + variation)))),
+        static_cast<sf::Uint8>(std::max(0.0f, std::min(255.0f, base_bg.g * (1.0f + variation)))),
+        static_cast<sf::Uint8>(std::max(0.0f, std::min(255.0f, base_bg.b * (1.0f + variation))))
+    );
 }
 
 sf::Color ResourceBoulder::getResourceColor(ResourceType type, bool sparkling) const {
@@ -282,14 +330,8 @@ sf::Color ResourceBoulder::getResourceColor(ResourceType type, bool sparkling) c
     return base_color;
 }
 
-sf::Color ResourceBoulder::getMossColor(int /* x */, int /* y */) const {
-    return varyColor(params.moss_color, 0.05f);
-}
-
-// FIXED: Add method to get terrain background for boulders
-sf::Color ResourceBoulder::getTerrainBackground() const {
-    // Boulders can appear in various terrains, use neutral background
-    return Core::LandColors::GRASS_MID_SLOPE;
+sf::Color ResourceBoulder::getMossColor(int x, int y) const {
+    return varyColor(params.moss_color, 0.08f);
 }
 
 void ResourceBoulder::updateAnimation(float time_delta) {
@@ -357,11 +399,11 @@ bool ResourceBoulder::isValidTerrain(float height, float /* slope */) const {
 
 int ResourceBoulder::getSizeInTiles(BoulderSize size) const {
     switch (size) {
-        case BoulderSize::SMALL: return 5;
-        case BoulderSize::MEDIUM: return 8;
-        case BoulderSize::LARGE: return 15;
-        case BoulderSize::MASSIVE: return 25;
-        default: return 8;
+        case BoulderSize::SMALL: return 6;    // Increased from 5
+        case BoulderSize::MEDIUM: return 10;  // Increased from 8
+        case BoulderSize::LARGE: return 18;   // Increased from 15
+        case BoulderSize::MASSIVE: return 30; // Increased from 25
+        default: return 10;
     }
 }
 

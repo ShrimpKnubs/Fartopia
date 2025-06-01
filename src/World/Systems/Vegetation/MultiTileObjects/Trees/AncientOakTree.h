@@ -11,7 +11,8 @@ namespace Trees {
 
 /**
  * Majestic Ancient Oak Tree - Large (15x15) procedurally generated tree
- * Features: Thick trunk, sprawling canopy, seasonal color changes, wind swaying
+ * Features: Dense bushy canopy, thick trunk, seasonal color changes, wind swaying
+ * Optimized for beautiful top-down view with lush, dense foliage
  */
 class AncientOakTree : public BaseVegetationObject {
 public:
@@ -43,26 +44,21 @@ private:
     float wind_sway_phase;
     float seasonal_factor;      // 0=summer, 1=autumn
     
-    // Generation methods
-    void generateTrunk();
-    void generateCanopy();
-    void generateRoots();
-    void addCanopyLayer(int center_x, int center_y, int radius, float density);
-    void addTrunkSection(int center_x, int center_y, int radius);
+    // Generation methods - optimized for bushy appearance
+    void generateDenseBushyCanopy();
+    void generateVisibleTrunk();
+    void generateRootFlare();
+    void addDenseCanopyLayer(int center_x, int center_y, int radius, float density);
+    void addVisibleTrunkSection(int center_x, int center_y, int radius);
     
-    // Animation methods
-    void updateWindSway(float wind_strength, int wind_direction);
-    void updateSeasonalColors();
-    
-    // Utility methods
-    bool isInCanopyRadius(int x, int y, int center_x, int center_y, int radius) const;
+    // Character and color selection for dense, lush appearance
+    char selectBushyCanopyCharacter(int x, int y, float density, float distance_factor) const;
     char selectTrunkCharacter(int x, int y) const;
-    char selectCanopyCharacter(int x, int y, float density) const;
-    sf::Color getLeafColor(int x, int y) const;
+    sf::Color getLushLeafColor(int x, int y, float distance_factor) const;
+    sf::Color getBushyCanopyBackground(int x, int y, float distance_factor) const;
     sf::Color getTrunkColor(int x, int y) const;
-    
-    // FIXED: Add terrain background method
-    sf::Color getTerrainBackground() const;
+    sf::Color getBarkBackground(int x, int y) const;
+    sf::Color getGroundBackground() const;
     
     // Placement validation
     bool isValidTerrain(float height, float slope) const;

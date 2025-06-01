@@ -22,11 +22,11 @@ void BaseVegetationObject::setDimensions(int w, int h) {
     tiles.resize(h);
     for (auto& row : tiles) {
         row.resize(w);
-        // FIXED: Initialize tiles with proper default values
+        // Initialize tiles with transparent background (no artifacts!)
         for (auto& tile : row) {
             tile.character = ' ';
             tile.foreground = sf::Color::White;
-            tile.background = getDefaultTerrainBackground(); // FIXED: Use terrain background instead of transparent
+            tile.background = sf::Color::Transparent; // Transparent by default
             tile.blocks_movement = false;
             tile.is_canopy = false;
             tile.animation_phase = 0.0f;
@@ -43,8 +43,7 @@ void BaseVegetationObject::setTile(int x, int y, char ch, sf::Color fg, sf::Colo
     tile.relative_y = y;
     tile.character = ch;
     tile.foreground = fg;
-    // FIXED: Don't allow transparent backgrounds - use terrain background instead
-    tile.background = (bg == sf::Color::Transparent) ? getDefaultTerrainBackground() : bg;
+    tile.background = bg; // Use the exact background provided
     tile.blocks_movement = blocks;
     tile.is_canopy = canopy;
     tile.animation_phase = 0.0f;
@@ -63,11 +62,11 @@ BaseVegetationObject::ObjectTile BaseVegetationObject::getTileAt(int relative_x,
 BaseVegetationObject::ObjectTile BaseVegetationObject::getTileAt(int relative_x, int relative_y, 
                                                                  const EntityContext& context) const {
     if (relative_x < 0 || relative_x >= width || relative_y < 0 || relative_y >= height) {
-        // FIXED: Return properly initialized empty tile
+        // Return empty transparent tile - no background artifacts
         ObjectTile empty_tile;
         empty_tile.character = ' ';
         empty_tile.foreground = sf::Color::White;
-        empty_tile.background = getDefaultTerrainBackground(); // FIXED: Use terrain background
+        empty_tile.background = sf::Color::Transparent;
         empty_tile.blocks_movement = false;
         empty_tile.is_canopy = false;
         empty_tile.animation_phase = 0.0f;
@@ -200,23 +199,17 @@ sf::Color BaseVegetationObject::interpolateSeasonalColor(const sf::Color& summer
     );
 }
 
-// FIXED: Add method to get default terrain background
-sf::Color BaseVegetationObject::getDefaultTerrainBackground() const {
-    // Use a generic grass background - this will be overridden by more specific backgrounds
-    return Core::LandColors::PLAINS_GRASS_BASE;
-}
-
 void BaseVegetationObject::ensureTileSpace(int x, int y) {
     if (y >= static_cast<int>(tiles.size())) {
         tiles.resize(y + 1);
     }
     if (x >= static_cast<int>(tiles[y].size())) {
         tiles[y].resize(x + 1);
-        // FIXED: Initialize new tiles properly
+        // Initialize new tiles with transparent background
         for (size_t i = tiles[y].size() - (x + 1 - tiles[y].size()); i < tiles[y].size(); ++i) {
             tiles[y][i].character = ' ';
             tiles[y][i].foreground = sf::Color::White;
-            tiles[y][i].background = getDefaultTerrainBackground(); // FIXED: Use terrain background
+            tiles[y][i].background = sf::Color::Transparent; // No artifacts!
             tiles[y][i].blocks_movement = false;
             tiles[y][i].is_canopy = false;
             tiles[y][i].animation_phase = 0.0f;

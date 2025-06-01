@@ -13,6 +13,7 @@ namespace MultiTileObjects {
 /**
  * Abstract base class for all multi-tile vegetation objects
  * Provides framework for trees, boulders, grass fields, etc.
+ * Optimized for beautiful top-down view with no visual artifacts
  */
 class BaseVegetationObject {
 public:
@@ -20,7 +21,7 @@ public:
         int relative_x = 0, relative_y = 0;                    // Position relative to object origin
         char character = ' ';                                  // Character to display
         sf::Color foreground = sf::Color::White;               // Foreground color
-        sf::Color background = sf::Color::White;               // Background color (no more transparent!)
+        sf::Color background = sf::Color::Transparent;         // Background color (transparent by default)
         bool blocks_movement = false;                          // Can entities pass through?
         bool is_canopy = false;                               // Is this a tree canopy (entity can walk under)?
         float animation_phase = 0.0f;                         // For animated effects
@@ -73,7 +74,7 @@ protected:
     
     // Helper methods for derived classes
     void setDimensions(int w, int h);
-    void setTile(int x, int y, char ch, sf::Color fg, sf::Color bg, // FIXED: bg no longer defaults to transparent
+    void setTile(int x, int y, char ch, sf::Color fg, sf::Color bg, // Background can be transparent
                 bool blocks = false, bool canopy = false);
     ObjectTile& getTileRef(int x, int y);
     
@@ -86,9 +87,6 @@ protected:
     void applyWindEffect(int x, int y, float wind_strength, int wind_direction);
     sf::Color interpolateSeasonalColor(const sf::Color& summer, const sf::Color& autumn, 
                                       float seasonal_factor) const;
-
-    // FIXED: Add method to get default terrain background
-    sf::Color getDefaultTerrainBackground() const;
 
 private:
     // Ensure tiles vector is properly sized

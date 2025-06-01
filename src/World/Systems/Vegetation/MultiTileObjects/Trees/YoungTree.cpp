@@ -13,14 +13,13 @@ namespace Trees {
 YoungTree::YoungTree(int origin_x, int origin_y, unsigned int seed)
     : BaseVegetationObject(origin_x, origin_y, seed), wind_sway_phase(0.0f), growth_animation(0.0f) {
     
-    // Set up as a smaller 4x4 tree
-    setDimensions(4, 4);
+    // Set up as a smaller 6x6 tree (increased from 4x4 for better appearance)
+    setDimensions(6, 6);
     has_animation = true;
     
     // Determine what type of young tree this is
     determineTreeType();
     
-    // FIXED: Generate the tree pattern immediately after construction
     generatePattern();
 }
 
@@ -37,7 +36,7 @@ void YoungTree::determineTreeType() {
             params.trunk_color = Colors::SILVER_BIRCH_BARK;
             params.leaf_color = Colors::SILVER_BIRCH_LEAVES;
             params.trunk_char = '!';
-            params.canopy_chars = "*.";
+            params.canopy_chars = "@#%*";  // Dense to sparse
             params.wind_sensitivity = 0.8f;
             break;
             
@@ -45,7 +44,7 @@ void YoungTree::determineTreeType() {
             params.trunk_color = Colors::ANCIENT_OAK_TRUNK;
             params.leaf_color = Colors::ANCIENT_OAK_CANOPY;
             params.trunk_char = 'Y';
-            params.canopy_chars = "%*";
+            params.canopy_chars = "#%*o";  // Dense foliage
             params.wind_sensitivity = 0.6f;
             break;
             
@@ -53,7 +52,7 @@ void YoungTree::determineTreeType() {
             params.trunk_color = Colors::NOBLE_PINE_TRUNK;
             params.leaf_color = Colors::NOBLE_PINE_NEEDLES;
             params.trunk_char = 'A';
-            params.canopy_chars = "^*";
+            params.canopy_chars = "@#^*";  // Coniferous patterns
             params.wind_sensitivity = 0.4f;
             break;
             
@@ -62,7 +61,7 @@ void YoungTree::determineTreeType() {
             params.trunk_color = Colors::WEEPING_WILLOW_TRUNK;
             params.leaf_color = Colors::WEEPING_WILLOW_FRONDS;
             params.trunk_char = 'W';
-            params.canopy_chars = "~.";
+            params.canopy_chars = "%~*,";  // Drooping patterns
             params.wind_sensitivity = 0.9f;
             break;
     }
@@ -73,78 +72,144 @@ void YoungTree::determineTreeType() {
 }
 
 void YoungTree::generatePattern() {
-    // Clear pattern with proper terrain background
-    sf::Color terrain_bg = getTerrainBackground();
+    // Start completely clear
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
-            setTile(x, y, ' ', sf::Color::Black, terrain_bg, false, false);
+            setTile(x, y, ' ', sf::Color::Black, sf::Color::Transparent, false, false);
         }
     }
     
+    generateBushyCanopy();
     generateTrunk();
-    generateCanopy();
 }
 
-void YoungTree::generateTrunk() {
-    // Simple trunk in center
-    int center_x = width / 2;
-    int trunk_y = height - 1; // Bottom of tree
-    
-    // FIXED: Use terrain background blended with trunk color instead of solid trunk
-    sf::Color trunk_bg = Tile::interpolateColor(getTerrainBackground(), params.trunk_color, 0.6f);
-    
-    setTile(center_x, trunk_y, params.trunk_char, 
-           params.trunk_color, trunk_bg,
-           true, false); // blocks movement
-}
-
-void YoungTree::generateCanopy() {
+void YoungTree::generateBushyCanopy() {
     int center_x = width / 2;
     int center_y = height / 2;
     
-    // Simple 3x3 canopy around center
-    for (int y = center_y - 1; y <= center_y + 1; ++y) {
-        for (int x = center_x - 1; x <= center_x + 1; ++x) {
-            if (x >= 0 && x < width && y >= 0 && y < height && y < height - 1) {
-                char canopy_char = selectCanopyChar(x, y);
-                sf::Color leaf_color = getAnimatedLeafColor(x, y);
-                // FIXED: Use terrain background instead of transparent
-                sf::Color bg_color = getTerrainBackground();
+    // Create dense, bushy canopy for young tree
+    // Even small trees should look full and healthy
+    
+    // Main canopy layer - dense core
+    addCanopyCircle(center_x, center_y - 1, 2, 0.9f);
+    
+    // Secondary layer for natural shape
+    addCanopyCircle(center_x, center_y - 2, 1, 0.8f);
+    
+    // Add some asymmetry
+    std::mt19937 rng(random_seed + 500);
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+    
+    if (dist(rng) > 0.5f) {
+        addCanopyCircle(center_x - 1, center_y, 1, 0.7f);
+    }
+    if (dist(rng) > 0.5f) {
+        addCanopyCircle(center_x + 1, center_y, 1, 0.7f);
+    }
+}
+
+void YoungTree::addCanopyCircle(int center_x, int center_y, int radius, float density) {
+    for (int y = center_y - radius; y <= center_y + radius; ++y) {
+        for (int x = center_x - radius; x <= center_x + radius; ++x) {
+            if (x >= 0 && x < width && y >= 0 && y < height) {
+                float distance = std::sqrt((x - center_x) * (x - center_x) + (y - center_y) * (y - center_y));
                 
-                setTile(x, y, canopy_char, leaf_color, bg_color, false, true); // true = is_canopy
+                if (distance <= radius + 0.5f) { // Slightly larger for better coverage
+                    float distance_factor = 1.0f - (distance / (radius + 0.5f));
+                    float noise = getProceduralNoise(x, y, 0.3f);
+                    
+                    // High chance of foliage for bushy appearance
+                    if (noise < density * distance_factor * 1.1f) {
+                        char canopy_char = selectDenseCanopyChar(x, y, density);
+                        sf::Color leaf_color = getAnimatedLeafColor(x, y, distance_factor);
+                        sf::Color leaf_bg = getCanopyBackground(x, y, distance_factor);
+                        
+                        setTile(x, y, canopy_char, leaf_color, leaf_bg, false, true); // true = is_canopy
+                    }
+                }
             }
         }
     }
 }
 
-char YoungTree::selectCanopyChar(int x, int y) const {
+void YoungTree::generateTrunk() {
+    // Simple but visible trunk in center bottom
+    int center_x = width / 2;
+    int trunk_y = height - 1; // Bottom of tree
+    
+    // Only show trunk if not covered by canopy
+    ObjectTile current_tile = getTileAt(center_x, trunk_y);
+    if (current_tile.character == ' ') {
+        sf::Color trunk_bg = getTrunkBackground();
+        
+        setTile(center_x, trunk_y, params.trunk_char, 
+               params.trunk_color, trunk_bg,
+               true, false); // blocks movement
+    }
+}
+
+char YoungTree::selectDenseCanopyChar(int x, int y, float density) const {
     if (params.canopy_chars.empty()) return '*';
     
     float noise = getProceduralNoise(x, y, 0.5f);
-    size_t char_index = static_cast<size_t>(noise * params.canopy_chars.size());
-    char_index = std::min(char_index, params.canopy_chars.size() - 1);
+    
+    // Select character based on density - denser = more solid characters
+    int char_index;
+    if (density > 0.8f) {
+        // Dense areas - use first characters (densest)
+        char_index = static_cast<int>(noise * 2) % std::min(2, static_cast<int>(params.canopy_chars.size()));
+    } else if (density > 0.6f) {
+        // Medium density
+        char_index = static_cast<int>(noise * 3) % std::min(3, static_cast<int>(params.canopy_chars.size()));
+    } else {
+        // Lower density - can use any character
+        char_index = static_cast<int>(noise * params.canopy_chars.size()) % params.canopy_chars.size();
+    }
     
     return params.canopy_chars[char_index];
 }
 
-sf::Color YoungTree::getAnimatedLeafColor(int /* x */, int /* y */) const {
-    // Young trees have more vibrant, changing colors
+sf::Color YoungTree::getAnimatedLeafColor(int /* x */, int /* y */, float distance_factor) const {
+    // Young trees have vibrant, healthy colors
     sf::Color base_color = params.leaf_color;
     
     // Growth animation affects brightness
-    float growth_brightness = 1.0f + growth_animation * 0.2f;
+    float growth_brightness = 1.0f + growth_animation * 0.15f;
     
+    // Add depth - inner areas darker, edges lighter
+    sf::Color deep_leaves = sf::Color(
+        static_cast<sf::Uint8>(base_color.r * 0.8f),
+        static_cast<sf::Uint8>(base_color.g * 0.9f),
+        static_cast<sf::Uint8>(base_color.b * 0.7f)
+    );
+    sf::Color bright_leaves = sf::Color(
+        static_cast<sf::Uint8>(std::min(255.0f, base_color.r * 1.2f * growth_brightness)),
+        static_cast<sf::Uint8>(std::min(255.0f, base_color.g * 1.1f * growth_brightness)),
+        static_cast<sf::Uint8>(std::min(255.0f, base_color.b * 1.0f * growth_brightness))
+    );
+    
+    return Tile::interpolateColor(deep_leaves, bright_leaves, distance_factor);
+}
+
+sf::Color YoungTree::getCanopyBackground(int x, int y, float distance_factor) const {
+    // Rich canopy background for young trees
+    sf::Color deep_canopy = sf::Color(30, 40, 22);    // Deep interior
+    sf::Color light_canopy = sf::Color(50, 65, 40);   // Lighter areas
+    
+    sf::Color base_bg = Tile::interpolateColor(deep_canopy, light_canopy, distance_factor);
+    
+    // Add variation
+    float variation = getProceduralNoise(x, y, 0.4f) * 0.1f - 0.05f;
     return sf::Color(
-        static_cast<sf::Uint8>(std::min(255.0f, base_color.r * growth_brightness)),
-        static_cast<sf::Uint8>(std::min(255.0f, base_color.g * growth_brightness)),
-        static_cast<sf::Uint8>(std::min(255.0f, base_color.b * growth_brightness))
+        static_cast<sf::Uint8>(std::max(0.0f, std::min(255.0f, base_bg.r * (1.0f + variation)))),
+        static_cast<sf::Uint8>(std::max(0.0f, std::min(255.0f, base_bg.g * (1.0f + variation)))),
+        static_cast<sf::Uint8>(std::max(0.0f, std::min(255.0f, base_bg.b * (1.0f + variation))))
     );
 }
 
-// FIXED: Add method to get terrain background for young trees
-sf::Color YoungTree::getTerrainBackground() const {
-    // Young trees grow in various terrain, use general grass background
-    return Core::LandColors::PLAINS_GRASS_BASE;
+sf::Color YoungTree::getTrunkBackground() const {
+    // Rich bark background for young trunk
+    return sf::Color(50, 40, 30);
 }
 
 void YoungTree::updateAnimation(float time_delta) {
