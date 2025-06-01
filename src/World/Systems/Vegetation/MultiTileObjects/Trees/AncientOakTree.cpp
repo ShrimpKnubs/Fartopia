@@ -217,6 +217,9 @@ sf::Color AncientOakTree::getLushLeafColor(int x, int y, float distance_factor) 
     sf::Color base_color = interpolateSeasonalColor(params.leaf_color_summer, 
                                                    params.leaf_color_autumn, seasonal_factor);
     
+    // Add position-based variation for natural appearance
+    float position_variation = getProceduralNoise(x, y, 0.3f) * 0.1f - 0.05f;
+    
     // Add depth based on position - inner leaves darker, outer leaves lighter
     float depth_factor = distance_factor;
     sf::Color deep_forest = sf::Color(
@@ -231,7 +234,15 @@ sf::Color AncientOakTree::getLushLeafColor(int x, int y, float distance_factor) 
     );
     
     sf::Color final_color = Tile::interpolateColor(deep_forest, bright_leaves, depth_factor);
-    return varyColor(final_color, 0.05f);
+    
+    // Apply position-based variation
+    final_color = sf::Color(
+        static_cast<sf::Uint8>(std::max(0.0f, std::min(255.0f, final_color.r * (1.0f + position_variation)))),
+        static_cast<sf::Uint8>(std::max(0.0f, std::min(255.0f, final_color.g * (1.0f + position_variation)))),
+        static_cast<sf::Uint8>(std::max(0.0f, std::min(255.0f, final_color.b * (1.0f + position_variation))))
+    );
+    
+    return final_color;
 }
 
 sf::Color AncientOakTree::getBushyCanopyBackground(int x, int y, float distance_factor) const {
@@ -251,8 +262,15 @@ sf::Color AncientOakTree::getBushyCanopyBackground(int x, int y, float distance_
     );
 }
 
-sf::Color AncientOakTree::getTrunkColor(int /* x */, int /* y */) const {
-    return varyColor(params.trunk_color, 0.08f);
+sf::Color AncientOakTree::getTrunkColor(int x, int y) const {
+    // Add position-based variation for realistic bark
+    float variation = getProceduralNoise(x, y, 0.4f) * 0.08f - 0.04f;
+    sf::Color varied_trunk = sf::Color(
+        static_cast<sf::Uint8>(std::max(0.0f, std::min(255.0f, params.trunk_color.r * (1.0f + variation)))),
+        static_cast<sf::Uint8>(std::max(0.0f, std::min(255.0f, params.trunk_color.g * (1.0f + variation)))),
+        static_cast<sf::Uint8>(std::max(0.0f, std::min(255.0f, params.trunk_color.b * (1.0f + variation))))
+    );
+    return varied_trunk;
 }
 
 sf::Color AncientOakTree::getBarkBackground(int x, int y) const {

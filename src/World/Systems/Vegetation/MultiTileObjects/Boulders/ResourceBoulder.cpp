@@ -331,7 +331,17 @@ sf::Color ResourceBoulder::getResourceColor(ResourceType type, bool sparkling) c
 }
 
 sf::Color ResourceBoulder::getMossColor(int x, int y) const {
-    return varyColor(params.moss_color, 0.08f);
+    // Add position-based variation for natural moss appearance
+    float position_variation = getProceduralNoise(x, y, 0.4f) * 0.12f - 0.06f;
+    
+    sf::Color base_moss = params.moss_color;
+    sf::Color varied_moss = sf::Color(
+        static_cast<sf::Uint8>(std::max(0.0f, std::min(255.0f, base_moss.r * (1.0f + position_variation)))),
+        static_cast<sf::Uint8>(std::max(0.0f, std::min(255.0f, base_moss.g * (1.0f + position_variation)))),
+        static_cast<sf::Uint8>(std::max(0.0f, std::min(255.0f, base_moss.b * (1.0f + position_variation))))
+    );
+    
+    return varied_moss;
 }
 
 void ResourceBoulder::updateAnimation(float time_delta) {
