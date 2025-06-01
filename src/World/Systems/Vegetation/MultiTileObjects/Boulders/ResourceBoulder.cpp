@@ -1,6 +1,6 @@
 // File: EmergentKingdoms/src/World/Systems/Vegetation/MultiTileObjects/Boulders/ResourceBoulder.cpp
 #include "ResourceBoulder.h"
-#include "../../../../Core/BaseConfig.h"
+#include "../../../../../Core/BaseConfig.h"
 #include <cmath>
 #include <random>
 

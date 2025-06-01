@@ -1,6 +1,6 @@
 // File: EmergentKingdoms/src/World/Systems/Vegetation/MultiTileObjects/Trees/YoungTree.cpp
 #include "YoungTree.h"
-#include "../../../../Core/BaseConfig.h"
+#include "../../../../../Core/BaseConfig.h"
 #include <cmath>
 #include <random>
 

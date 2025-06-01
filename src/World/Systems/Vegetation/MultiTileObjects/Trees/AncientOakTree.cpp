@@ -1,6 +1,6 @@
 // File: EmergentKingdoms/src/World/Systems/Vegetation/MultiTileObjects/Trees/AncientOakTree.cpp
 #include "AncientOakTree.h"
-#include "../../../../Core/BaseConfig.h"
+#include "../../../../../Core/BaseConfig.h"  // FIXED: Added one more ../
 #include <cmath>
 #include <random>
 
