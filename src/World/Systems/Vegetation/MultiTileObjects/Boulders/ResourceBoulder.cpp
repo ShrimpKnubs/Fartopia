@@ -219,9 +219,9 @@ void ResourceBoulder::addWeatheringDetails() {
             if (tile.character != ' ') {
                 float weathering_noise = getProceduralNoise(x, y, 0.8f);
                 if (weathering_noise > 0.85f) {
-                    // Add weathering details
-                    if (tile.character == 'O') {
-                        tile.character = (weathering_noise > 0.92f) ? '8' : 'o';
+                    // Add weathering details - TOP-DOWN appropriate
+                    if (tile.character == '@') {
+                        tile.character = (weathering_noise > 0.92f) ? 'o' : '.';
                     }
                     // Slightly darken weathered areas
                     tile.background = sf::Color(
@@ -236,22 +236,23 @@ void ResourceBoulder::addWeatheringDetails() {
 }
 
 char ResourceBoulder::selectBoulderCharacter(int x, int y, float distance_factor) const {
+    // TOP-DOWN VIEW: What boulders look like from directly above
     float noise = getProceduralNoise(x, y, 0.4f);
     
     // Character selection based on position and randomness for natural look
     if (distance_factor < 0.3f) {
-        // Center of boulder - solid
-        return (noise < 0.7f) ? 'O' : '@';
+        // Center of boulder - solid, rounded from above
+        return (noise < 0.6f) ? '@' : '#';
     } else if (distance_factor < 0.7f) {
-        // Mid section
-        if (noise < 0.5f) return 'O';
-        else if (noise < 0.8f) return 'o';
-        else return '8';
+        // Mid section - visible cracks and texture from above
+        if (noise < 0.4f) return '@';
+        else if (noise < 0.7f) return '%';
+        else return 'o';
     } else {
-        // Edges - more varied
-        if (noise < 0.4f) return 'o';
-        else if (noise < 0.7f) return '.';
-        else return '8';
+        // Edges - broken, uneven edge from above
+        if (noise < 0.5f) return 'o';
+        else if (noise < 0.8f) return '.';
+        else return ',';
     }
 }
 
@@ -266,12 +267,13 @@ char ResourceBoulder::selectResourceCharacter(ResourceType type) const {
 }
 
 char ResourceBoulder::selectMossCharacter(int x, int y) const {
+    // TOP-DOWN VIEW: Moss patches from above
     float noise = getProceduralNoise(x, y, 0.6f);
     
-    // Variety in moss characters for natural appearance
-    if (noise < 0.4f) return '.';
-    else if (noise < 0.7f) return ',';
-    else return ';';
+    // Variety in moss characters for natural appearance from above
+    if (noise < 0.4f) return ',';       // Small moss patches
+    else if (noise < 0.7f) return '.';  // Scattered moss
+    else return ';';                    // Dense moss areas
 }
 
 sf::Color ResourceBoulder::getBoulderForegroundColor(int x, int y, float distance_factor) const {
@@ -387,24 +389,37 @@ bool ResourceBoulder::canPlaceAt(int world_x, int world_y,
         return false;
     }
     
-    // Check center terrain
+    // Check center terrain and surrounding area for suitability
     int center_x = world_x + width / 2;
     int center_y = world_y + height / 2;
     
-    if (center_x >= 0 && center_x < map_width && center_y >= 0 && center_y < map_height) {
-        size_t index = static_cast<size_t>(center_y) * map_width + center_x;
-        
-        if (index < heightmap.size() && index < slope_map.size()) {
-            return isValidTerrain(heightmap[index], slope_map[index]);
+    // Check a 3x3 area around the center for consistent terrain
+    for (int dy = -1; dy <= 1; ++dy) {
+        for (int dx = -1; dx <= 1; ++dx) {
+            int check_x = center_x + dx;
+            int check_y = center_y + dy;
+            
+            if (check_x >= 0 && check_x < map_width && check_y >= 0 && check_y < map_height) {
+                size_t index = static_cast<size_t>(check_y) * map_width + check_x;
+                
+                if (index < heightmap.size() && index < slope_map.size()) {
+                    if (!isValidTerrain(heightmap[index], slope_map[index])) {
+                        return false;
+                    }
+                }
+            }
         }
     }
     
-    return false;
+    return true;
 }
 
-bool ResourceBoulder::isValidTerrain(float height, float /* slope */) const {
-    // Boulders can be placed almost anywhere above water
-    return height >= 0.01f;
+bool ResourceBoulder::isValidTerrain(float height, float slope) const {
+    // FIXED: Boulders should NOT spawn on water or very high mountains
+    // They prefer hilly terrain with some slope for realism
+    return height >= 0.03f &&           // Above water level  
+           height <= 0.8f &&            // Below high mountain peaks
+           slope <= 0.15f;              // Not on cliff faces
 }
 
 int ResourceBoulder::getSizeInTiles(BoulderSize size) const {

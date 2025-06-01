@@ -30,29 +30,29 @@ void YoungTree::determineTreeType() {
     int tree_type_int = type_dist(rng);
     params.type = static_cast<TreeType>(tree_type_int);
     
-    // Set tree-specific properties
+    // Set tree-specific properties for TOP-DOWN VIEW
     switch (params.type) {
         case TreeType::BIRCH_SAPLING:
             params.trunk_color = Colors::SILVER_BIRCH_BARK;
             params.leaf_color = Colors::SILVER_BIRCH_LEAVES;
-            params.trunk_char = '!';
-            params.canopy_chars = "@#%*";  // Dense to sparse
+            params.trunk_char = 'i';        // Thin trunk from above
+            params.canopy_chars = "*o.,";   // Light, scattered canopy
             params.wind_sensitivity = 0.8f;
             break;
             
         case TreeType::OAK_SAPLING:
             params.trunk_color = Colors::ANCIENT_OAK_TRUNK;
             params.leaf_color = Colors::ANCIENT_OAK_CANOPY;
-            params.trunk_char = 'Y';
-            params.canopy_chars = "#%*o";  // Dense foliage
+            params.trunk_char = 'O';        // Rounder, thicker trunk
+            params.canopy_chars = "%*o.";   // Dense foliage patches
             params.wind_sensitivity = 0.6f;
             break;
             
         case TreeType::PINE_SAPLING:
             params.trunk_color = Colors::NOBLE_PINE_TRUNK;
             params.leaf_color = Colors::NOBLE_PINE_NEEDLES;
-            params.trunk_char = 'A';
-            params.canopy_chars = "@#^*";  // Coniferous patterns
+            params.trunk_char = '|';        // Straight pine trunk
+            params.canopy_chars = "^*|.";   // Pointed, needle-like
             params.wind_sensitivity = 0.4f;
             break;
             
@@ -60,8 +60,8 @@ void YoungTree::determineTreeType() {
         default:
             params.trunk_color = Colors::WEEPING_WILLOW_TRUNK;
             params.leaf_color = Colors::WEEPING_WILLOW_FRONDS;
-            params.trunk_char = 'W';
-            params.canopy_chars = "%~*,";  // Drooping patterns
+            params.trunk_char = 'I';        // Upright willow trunk
+            params.canopy_chars = ",~`.";   // Drooping, flowing patterns
             params.wind_sensitivity = 0.9f;
             break;
     }
@@ -153,16 +153,16 @@ char YoungTree::selectDenseCanopyChar(int x, int y, float density) const {
     
     float noise = getProceduralNoise(x, y, 0.5f);
     
-    // Select character based on density - denser = more solid characters
+    // TOP-DOWN VIEW: Select character based on density for natural look from above
     int char_index;
     if (density > 0.8f) {
-        // Dense areas - use first characters (densest)
+        // Dense areas - use first characters (densest from above)
         char_index = static_cast<int>(noise * 2) % std::min(2, static_cast<int>(params.canopy_chars.size()));
     } else if (density > 0.6f) {
-        // Medium density
+        // Medium density - visible clusters from above
         char_index = static_cast<int>(noise * 3) % std::min(3, static_cast<int>(params.canopy_chars.size()));
     } else {
-        // Lower density - can use any character
+        // Lower density - scattered leaves from above
         char_index = static_cast<int>(noise * params.canopy_chars.size()) % params.canopy_chars.size();
     }
     
@@ -268,8 +268,11 @@ bool YoungTree::canPlaceAt(int world_x, int world_y,
 }
 
 bool YoungTree::isValidTerrain(float height, float slope) const {
-    // Young trees are more adaptable than ancient trees
-    return height >= 0.02f && height <= 0.8f && slope <= 0.05f;
+    // FIXED: Young trees should NOT spawn on water or high mountains
+    // They are more adaptable than ancient trees but still have limits
+    return height >= 0.03f &&          // Above water level
+           height <= 0.75f &&          // Below high mountain areas
+           slope <= 0.04f;             // Gentle to moderate slopes only
 }
 
 } // namespace Trees

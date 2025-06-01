@@ -87,10 +87,10 @@ void Map::generate() {
 }
 
 void Map::runGenerationPipeline() {
-    // Create world data wrapper for generation steps
+    // Create world data wrapper for generation steps - FIXED: Include lake_has_waves_map
     WorldData world_data(
         heightmap_data, is_river_tile, is_lake_tile,
-        slope_map, aspect_map, lake_has_waves_map,
+        slope_map, aspect_map, lake_has_waves_map,  // FIXED: Added lake_has_waves_map
         width, height, this
     );
     

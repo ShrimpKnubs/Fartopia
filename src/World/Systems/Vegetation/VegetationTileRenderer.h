@@ -124,7 +124,7 @@ public:
     }
 
 private:
-    // Helper to get terrain background color based on height
+    // Helper to get proper terrain background color based on height
     sf::Color getTerrainBackground(float height_val) const {
         if (height_val < Core::TERRAIN_PLAINS_LOW) {
             return Core::LandColors::GRASS_DARK_VALLEY;
@@ -139,91 +139,91 @@ private:
 
     // ===== TREE RENDERERS =====
     Core::ScreenCell renderAncientOak(unsigned int tile_hash, float height_val) const {
-        char ch = Colors::ANCIENT_OAK;
-        sf::Color bg = getTerrainBackground(height_val); // FIXED: Use terrain background instead of trunk color
+        char ch = 'T';
+        sf::Color bg = getTerrainBackground(height_val);
         sf::Color fg = Colors::ANCIENT_OAK_CANOPY;
         
         // Variation in ancient oak appearance
         if (tile_hash % 3 == 0) {
-            bg = Tile::interpolateColor(bg, Colors::ANCIENT_OAK_TRUNK, 0.4f);
+            bg = Tile::interpolateColor(bg, Colors::ANCIENT_OAK_TRUNK, 0.3f);
         }
         
         return {ch, fg, bg};
     }
     
     Core::ScreenCell renderNoblePine(unsigned int tile_hash, float height_val) const {
-        char ch = Colors::NOBLE_PINE;
-        sf::Color bg = getTerrainBackground(height_val); // FIXED: Use terrain background
+        char ch = 'A';
+        sf::Color bg = getTerrainBackground(height_val);
         sf::Color fg = Colors::NOBLE_PINE_NEEDLES;
         
         if (tile_hash % 4 == 0) {
             fg = Tile::interpolateColor(fg, sf::Color(45, 65, 40), 0.2f);
-            bg = Tile::interpolateColor(bg, Colors::NOBLE_PINE_TRUNK, 0.3f);
+            bg = Tile::interpolateColor(bg, Colors::NOBLE_PINE_TRUNK, 0.2f);
         }
         
         return {ch, fg, bg};
     }
     
     Core::ScreenCell renderSilverBirch(unsigned int tile_hash, float height_val) const {
-        char ch = Colors::SILVER_BIRCH;
-        sf::Color bg = getTerrainBackground(height_val); // FIXED: Use terrain background
+        char ch = '!';
+        sf::Color bg = getTerrainBackground(height_val);
         sf::Color fg = Colors::SILVER_BIRCH_LEAVES;
         
         if (tile_hash % 5 == 0) {
-            bg = Tile::interpolateColor(bg, Colors::SILVER_BIRCH_BARK, 0.3f);
+            bg = Tile::interpolateColor(bg, Colors::SILVER_BIRCH_BARK, 0.2f);
         }
         
         return {ch, fg, bg};
     }
     
     Core::ScreenCell renderWeepingWillow(unsigned int tile_hash, float height_val) const {
-        char ch = Colors::WEEPING_WILLOW;
-        sf::Color bg = getTerrainBackground(height_val); // FIXED: Use terrain background
+        char ch = 'W';
+        sf::Color bg = getTerrainBackground(height_val);
         sf::Color fg = Colors::WEEPING_WILLOW_FRONDS;
         
         if (tile_hash % 3 == 0) {
             fg = Tile::interpolateColor(fg, Colors::MEADOW_GRASS_WAVE, 0.2f);
-            bg = Tile::interpolateColor(bg, Colors::WEEPING_WILLOW_TRUNK, 0.2f);
+            bg = Tile::interpolateColor(bg, Colors::WEEPING_WILLOW_TRUNK, 0.15f);
         }
         
         return {ch, fg, bg};
     }
     
     Core::ScreenCell renderYoungTree(unsigned int tile_hash, float height_val) const {
-        char ch = Colors::YOUNG_TREE;
-        sf::Color bg = getTerrainBackground(height_val); // FIXED: Use terrain background
+        char ch = 'Y';
+        sf::Color bg = getTerrainBackground(height_val);
         sf::Color fg = Colors::SILVER_BIRCH_LEAVES;
         
         if (tile_hash % 2 == 0) {
             fg = Colors::NOBLE_PINE_NEEDLES;
-            bg = Tile::interpolateColor(bg, Colors::ANCIENT_OAK_TRUNK, 0.2f);
+            bg = Tile::interpolateColor(bg, Colors::ANCIENT_OAK_TRUNK, 0.15f);
         }
         
         return {ch, fg, bg};
     }
     
     Core::ScreenCell renderTreeGrove(unsigned int tile_hash, float height_val) const {
-        char ch = Colors::TREE_GROVE;
-        sf::Color bg = getTerrainBackground(height_val); // FIXED: Use terrain background  
+        char ch = '%';
+        sf::Color bg = getTerrainBackground(height_val);
         sf::Color fg = Tile::interpolateColor(Colors::ANCIENT_OAK_CANOPY, 
                                              Colors::NOBLE_PINE_NEEDLES, 0.5f);
         
         if (tile_hash % 4 == 0) {
             fg = Tile::interpolateColor(fg, Colors::SILVER_BIRCH_LEAVES, 0.3f);
-            bg = Tile::interpolateColor(bg, Colors::FOREST_UNDERGROWTH, 0.4f);
+            bg = Tile::interpolateColor(bg, Colors::FOREST_UNDERGROWTH, 0.3f);
         }
         
         return {ch, fg, bg};
     }
     
     Core::ScreenCell renderDenseForest(unsigned int tile_hash, float height_val) const {
-        char ch = Colors::DENSE_THICKET;
-        sf::Color bg = Tile::interpolateColor(getTerrainBackground(height_val), Colors::DENSE_THICKET_BG, 0.7f); // FIXED: Blend with terrain
+        char ch = '#';
+        sf::Color bg = Tile::interpolateColor(getTerrainBackground(height_val), Colors::DENSE_THICKET_BG, 0.5f);
         sf::Color fg = Colors::ANCIENT_OAK_CANOPY;
         
         // Very dense, dark forest
         if (tile_hash % 3 == 0) {
-            bg = Tile::interpolateColor(bg, sf::Color(15, 25, 12), 0.4f);
+            bg = Tile::interpolateColor(bg, sf::Color(15, 25, 12), 0.3f);
         }
         
         return {ch, fg, bg};
@@ -231,8 +231,8 @@ private:
     
     // ===== BUSH RENDERERS =====
     Core::ScreenCell renderDenseThicket(unsigned int tile_hash, float height_val) const {
-        char ch = Colors::DENSE_THICKET;
-        sf::Color bg = Tile::interpolateColor(getTerrainBackground(height_val), Colors::DENSE_THICKET_BG, 0.6f); // FIXED: Blend with terrain
+        char ch = '#';
+        sf::Color bg = Tile::interpolateColor(getTerrainBackground(height_val), Colors::DENSE_THICKET_BG, 0.4f);
         sf::Color fg = Colors::DENSE_THICKET_FG;
         
         if (tile_hash % 4 == 0) {
@@ -243,8 +243,8 @@ private:
     }
     
     Core::ScreenCell renderBerryBush(unsigned int tile_hash, float height_val) const {
-        char ch = Colors::BERRY_BUSH;
-        sf::Color bg = getTerrainBackground(height_val); // FIXED: Use terrain background
+        char ch = 'o';
+        sf::Color bg = getTerrainBackground(height_val);
         sf::Color fg = Colors::BERRY_BUSH_BERRIES;
         
         // Sometimes show the green bush instead of berries
@@ -256,12 +256,12 @@ private:
     }
     
     Core::ScreenCell renderWildRoses(unsigned int tile_hash, float height_val) const {
-        char ch = Colors::WILD_ROSES;
-        sf::Color bg = getTerrainBackground(height_val); // FIXED: Use terrain background
+        char ch = '@';
+        sf::Color bg = getTerrainBackground(height_val); // FIXED: Always use terrain background
         sf::Color fg = Colors::WILD_ROSE_BLOOM;
         
         if (tile_hash % 4 == 0) {
-            fg = Tile::interpolateColor(Colors::WILD_ROSE_BG, fg, 0.6f);  // Less prominent blooms
+            fg = Tile::interpolateColor(Colors::WILD_ROSE_BG, fg, 0.6f);
         }
         
         return {ch, fg, bg};
@@ -272,12 +272,12 @@ private:
                                            float wind_offset, float height_val) const {
         // Flowing grass with wildflowers
         char ch = getWindGrassCharacter(tile_hash, animation_progress, wind_offset);
-        sf::Color bg = getTerrainBackground(height_val); // FIXED: Use terrain background
+        sf::Color bg = getTerrainBackground(height_val); // FIXED: Always use terrain background
         sf::Color fg = Colors::MEADOW_GRASS_WAVE;
         
         // Occasional flowers
         if (tile_hash % 6 == 0) {
-            ch = Colors::WILDFLOWERS;
+            ch = '*';
             fg = (tile_hash % 12 < 4) ? Colors::MEADOW_BUTTERCUP : 
                  (tile_hash % 12 < 8) ? Colors::FOREST_VIOLET : Colors::ROYAL_LILY_WHITE;
         }
@@ -286,8 +286,8 @@ private:
     }
     
     Core::ScreenCell renderWildflowers(unsigned int tile_hash, float height_val) const {
-        char ch = Colors::WILDFLOWERS;
-        sf::Color bg = getTerrainBackground(height_val); // FIXED: Use terrain background
+        char ch = '*';
+        sf::Color bg = getTerrainBackground(height_val); // FIXED: Always use terrain background
         sf::Color fg;
         
         // Different flower colors
@@ -302,20 +302,20 @@ private:
     }
     
     Core::ScreenCell renderRoyalLily(unsigned int tile_hash, float height_val) const {
-        char ch = Colors::ROYAL_LILY;
-        sf::Color bg = getTerrainBackground(height_val); // FIXED: Use terrain background
+        char ch = '&';
+        sf::Color bg = getTerrainBackground(height_val); // FIXED: Always use terrain background
         sf::Color fg = (tile_hash % 2 == 0) ? Colors::ROYAL_LILY_WHITE : Colors::ROYAL_LILY_GOLD;
         
         return {ch, fg, bg};
     }
     
     Core::ScreenCell renderHerbPatch(unsigned int tile_hash, float height_val) const {
-        char ch = Colors::HERB_PATCH;
-        sf::Color bg = getTerrainBackground(height_val); // FIXED: Use terrain background
+        char ch = '~';
+        sf::Color bg = getTerrainBackground(height_val); // FIXED: Always use terrain background
         sf::Color fg = Tile::interpolateColor(Colors::HERB_PATCH_GREEN, Colors::MEADOW_GRASS_WAVE, 0.4f);
         
         if (tile_hash % 3 == 0) {
-            fg = Tile::interpolateColor(fg, Colors::ROYAL_LILY_GOLD, 0.2f);  // Subtle flower hints
+            fg = Tile::interpolateColor(fg, Colors::ROYAL_LILY_GOLD, 0.2f);
         }
         
         return {ch, fg, bg};
@@ -323,32 +323,32 @@ private:
     
     // ===== ROCK RENDERERS =====
     Core::ScreenCell renderMossyBoulder(unsigned int tile_hash, float height_val) const {
-        char ch = Colors::MOSSY_BOULDER;
-        sf::Color bg = Tile::interpolateColor(getTerrainBackground(height_val), Colors::MOSSY_BOULDER_BASE, 0.8f); // FIXED: Blend with terrain
+        char ch = 'O';
+        sf::Color bg = Tile::interpolateColor(getTerrainBackground(height_val), Colors::MOSSY_BOULDER_BASE, 0.6f);
         sf::Color fg = Colors::MOSSY_BOULDER_MOSS;
         
         if (tile_hash % 4 == 0) {
-            bg = Tile::interpolateColor(bg, Colors::GRANITE_BOULDER, 0.3f);
+            bg = Tile::interpolateColor(bg, Colors::GRANITE_BOULDER, 0.2f);
         }
         
         return {ch, fg, bg};
     }
     
     Core::ScreenCell renderStandingStone(unsigned int tile_hash, float height_val) const {
-        char ch = Colors::STANDING_STONE;
-        sf::Color bg = Tile::interpolateColor(getTerrainBackground(height_val), Colors::STANDING_STONE_ANCIENT, 0.8f); // FIXED: Blend with terrain
+        char ch = 'I';
+        sf::Color bg = Tile::interpolateColor(getTerrainBackground(height_val), Colors::STANDING_STONE_ANCIENT, 0.6f);
         sf::Color fg = Tile::interpolateColor(bg, sf::Color(120, 115, 108), 0.3f);
         
         if (tile_hash % 3 == 0) {
-            bg = Tile::interpolateColor(bg, Colors::MOSSY_BOULDER_MOSS, 0.2f);  // Ancient moss
+            bg = Tile::interpolateColor(bg, Colors::MOSSY_BOULDER_MOSS, 0.15f);
         }
         
         return {ch, fg, bg};
     }
     
     Core::ScreenCell renderRockOutcrop(unsigned int tile_hash, float height_val) const {
-        char ch = Colors::ROCK_OUTCROP;
-        sf::Color bg = getTerrainBackground(height_val); // FIXED: Use terrain background for small rocks
+        char ch = '.';
+        sf::Color bg = getTerrainBackground(height_val); // Small rocks use terrain background
         sf::Color fg = Colors::ROCK_OUTCROP_GRAY;
         
         if (tile_hash % 5 == 0) {
@@ -360,8 +360,8 @@ private:
     
     // ===== RESOURCE RENDERERS =====
     Core::ScreenCell renderGoldVein(unsigned int tile_hash, float animation_progress, float height_val) const {
-        char ch = Colors::GOLD_VEIN;
-        sf::Color bg = getTerrainBackground(height_val); // FIXED: Use terrain background
+        char ch = '$';
+        sf::Color bg = getTerrainBackground(height_val); // FIXED: Always use terrain background
         sf::Color fg = Colors::GOLD_VEIN_GLEAM;
         
         // Subtle sparkle animation
@@ -374,8 +374,8 @@ private:
     }
     
     Core::ScreenCell renderSilverLode(unsigned int tile_hash, float animation_progress, float height_val) const {
-        char ch = Colors::SILVER_LODE;
-        sf::Color bg = getTerrainBackground(height_val); // FIXED: Use terrain background
+        char ch = '=';
+        sf::Color bg = getTerrainBackground(height_val); // FIXED: Always use terrain background
         sf::Color fg = Colors::SILVER_LODE_GLEAM;
         
         // Silver sparkle
@@ -388,8 +388,8 @@ private:
     }
     
     Core::ScreenCell renderIronOre(unsigned int tile_hash, float height_val) const {
-        char ch = Colors::IRON_ORE;
-        sf::Color bg = getTerrainBackground(height_val); // FIXED: Use terrain background
+        char ch = '#';
+        sf::Color bg = getTerrainBackground(height_val); // FIXED: Always use terrain background
         sf::Color fg = Colors::IRON_ORE_METAL;
         
         if (tile_hash % 3 == 0) {
@@ -400,8 +400,8 @@ private:
     }
     
     Core::ScreenCell renderCopperDeposit(unsigned int tile_hash, float height_val) const {
-        char ch = Colors::COPPER_DEPOSIT;
-        sf::Color bg = getTerrainBackground(height_val); // FIXED: Use terrain background
+        char ch = '+';
+        sf::Color bg = getTerrainBackground(height_val); // FIXED: Always use terrain background
         sf::Color fg = Colors::COPPER_DEPOSIT_GLEAM;
         
         if (tile_hash % 4 == 0) {
@@ -415,7 +415,7 @@ private:
     Core::ScreenCell renderFlowingGrass(unsigned int tile_hash, float animation_progress, 
                                        float wind_offset, float height_val) const {
         char ch = getWindGrassCharacter(tile_hash, animation_progress, wind_offset);
-        sf::Color bg = getTerrainBackground(height_val); // FIXED: Use terrain background
+        sf::Color bg = getTerrainBackground(height_val); // FIXED: Always use terrain background
         sf::Color fg = Colors::MEADOW_GRASS_WAVE;
         
         // Wind animation affects color intensity
@@ -433,13 +433,13 @@ private:
         
         // Determine grass character based on wind strength and direction
         if (wind_strength < 0.2f) {
-            return Colors::GRASS_UPRIGHT;
+            return '|';
         } else if (wind_strength < 0.4f) {
-            return (wind_phase > 0) ? Colors::GRASS_LEAN_RIGHT : Colors::GRASS_LEAN_LEFT;
+            return (wind_phase > 0) ? '/' : '\\';
         } else if (wind_strength < 0.7f) {
-            return (tile_hash % 2 == 0) ? Colors::GRASS_WAVE_CREST : Colors::GRASS_WAVE_TROUGH;
+            return (tile_hash % 2 == 0) ? '^' : 'v';
         } else {
-            return Colors::GRASS_BENT_STRONG;
+            return '_';
         }
     }
 };

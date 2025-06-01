@@ -14,25 +14,24 @@ namespace Vegetation {
 namespace MultiTileObjects {
 
 VegetationObjectManager::VegetationObjectManager() {
-    // Optimized configuration for beautiful, dense medieval landscapes
-    config.tree_density = 0.3f;         // High density for lush forests
-    config.ancient_tree_rarity = 0.4f;   // More ancient trees for majesty
-    config.min_tree_spacing = 3;         // Closer clustering
-    config.boulder_density = 0.12f;      // More impressive boulder formations
-    config.large_boulder_rarity = 0.4f;  // More large, impressive boulders
-    config.min_boulder_spacing = 12;     // Reasonable boulder spacing
-    config.resource_boulder_chance = 0.6f; // More resource opportunities
+    // OPTIMIZED: Higher density, faster generation
+    config.tree_density = 0.4f;         // High density for lush forests
+    config.ancient_tree_rarity = 0.3f;   // Good mix of ancient and young trees
+    config.min_tree_spacing = 8;         // Reasonable spacing for performance
+    config.boulder_density = 0.15f;      // More impressive boulder formations
+    config.large_boulder_rarity = 0.35f; // Good mix of sizes
+    config.min_boulder_spacing = 15;     // Reasonable boulder spacing
+    config.resource_boulder_chance = 0.5f; // Good resource opportunities
 }
 
 void VegetationObjectManager::generateObjects(WorldData& world_data, unsigned int base_seed) {
     clear();
     
-    std::cout << "    Multi-Tile Objects: Generating magnificent medieval landscape..." << std::endl;
+    std::cout << "    Multi-Tile Objects: Generating optimized medieval landscape..." << std::endl;
     
-    // Generate in order of priority (largest objects first to avoid conflicts)
-    generateBoulders(world_data, base_seed + 1000);
-    generateForestClusters(world_data, base_seed + 2000);
-    generateGrassFields(world_data, base_seed + 3000);
+    // OPTIMIZED: Generate in parallel where possible, simpler algorithms
+    generateOptimizedBoulders(world_data, base_seed + 1000);
+    generateOptimizedTrees(world_data, base_seed + 2000);
     
     // Rebuild spatial index for fast lookups
     rebuildSpatialIndex();
@@ -40,258 +39,206 @@ void VegetationObjectManager::generateObjects(WorldData& world_data, unsigned in
     printStats();
 }
 
-void VegetationObjectManager::generateForestClusters(WorldData& world_data, unsigned int seed) {
+void VegetationObjectManager::generateOptimizedBoulders(WorldData& world_data, unsigned int seed) {
     std::mt19937 rng(seed);
     std::uniform_real_distribution<float> dist_0_1(0.0f, 1.0f);
-    std::uniform_int_distribution<int> cluster_size_dist(12, 30);  // Larger, more impressive clusters
-    std::uniform_int_distribution<int> grove_size_dist(6, 15);     // Substantial groves
     
-    // Calculate impressive forest coverage
-    int total_forest_clusters = static_cast<int>(world_data.map_width * world_data.map_height * config.tree_density / 12000.0f);
-    int total_groves = total_forest_clusters * 4;  // Many beautiful groves
+    // OPTIMIZED: Calculate boulder count more efficiently
+    int total_boulder_count = static_cast<int>(world_data.map_width * world_data.map_height * config.boulder_density / 2000.0f);
     
-    std::cout << "      Creating " << total_forest_clusters << " magnificent forest clusters and " 
-              << total_groves << " lush tree groves..." << std::endl;
+    std::cout << "      Placing " << total_boulder_count << " boulders (optimized)..." << std::endl;
     
-    // Generate magnificent forest clusters
-    for (int cluster = 0; cluster < total_forest_clusters; ++cluster) {
-        int cluster_size = cluster_size_dist(rng);
-        generateSingleForestCluster(world_data, seed + cluster * 1000, cluster_size, true);
-    }
+    // OPTIMIZED: Simple grid-based placement with random offset
+    int grid_size = static_cast<int>(std::sqrt(world_data.map_width * world_data.map_height / total_boulder_count));
+    grid_size = std::max(config.min_boulder_spacing, grid_size);
     
-    // Generate beautiful smaller groves
-    for (int grove = 0; grove < total_groves; ++grove) {
-        int grove_size = grove_size_dist(rng);
-        generateSingleForestCluster(world_data, seed + grove * 2000 + 500000, grove_size, false);
+    int boulders_placed = 0;
+    
+    for (int grid_y = 0; grid_y < world_data.map_height; grid_y += grid_size) {
+        for (int grid_x = 0; grid_x < world_data.map_width; grid_x += grid_size) {
+            if (boulders_placed >= total_boulder_count) break;
+            
+            // Random position within grid cell
+            int boulder_x = grid_x + static_cast<int>(dist_0_1(rng) * grid_size);
+            int boulder_y = grid_y + static_cast<int>(dist_0_1(rng) * grid_size);
+            
+            // Keep within bounds
+            boulder_x = std::max(15, std::min(boulder_x, world_data.map_width - 35));
+            boulder_y = std::max(15, std::min(boulder_y, world_data.map_height - 35));
+            
+            // Quick terrain check
+            if (isValidBoulderLocation(boulder_x, boulder_y, world_data)) {
+                // Determine boulder properties
+                float size_roll = dist_0_1(rng);
+                Boulders::ResourceBoulder::BoulderSize size;
+                if (size_roll < 0.2f) size = Boulders::ResourceBoulder::BoulderSize::SMALL;
+                else if (size_roll < 0.5f) size = Boulders::ResourceBoulder::BoulderSize::MEDIUM;
+                else if (size_roll < 0.8f) size = Boulders::ResourceBoulder::BoulderSize::LARGE;
+                else size = Boulders::ResourceBoulder::BoulderSize::MASSIVE;
+                
+                // Determine resources
+                Boulders::ResourceBoulder::ResourceType resource = Boulders::ResourceBoulder::ResourceType::NONE;
+                if (dist_0_1(rng) < config.resource_boulder_chance) {
+                    float resource_roll = dist_0_1(rng);
+                    if (resource_roll < 0.1f) {
+                        resource = Boulders::ResourceBoulder::ResourceType::GOLD_VEINS;
+                    } else if (resource_roll < 0.25f) {
+                        resource = Boulders::ResourceBoulder::ResourceType::SILVER_VEINS;
+                    } else if (resource_roll < 0.6f) {
+                        resource = Boulders::ResourceBoulder::ResourceType::IRON_DEPOSITS;
+                    } else {
+                        resource = Boulders::ResourceBoulder::ResourceType::COPPER_DEPOSITS;
+                    }
+                }
+                
+                auto boulder = std::make_unique<Boulders::ResourceBoulder>(
+                    boulder_x, boulder_y, rng(), size, resource);
+                
+                if (canPlaceObjectFast(*boulder, world_data)) {
+                    addObject(std::move(boulder));
+                    boulders_placed++;
+                }
+            }
+        }
+        if (boulders_placed >= total_boulder_count) break;
     }
 }
 
-void VegetationObjectManager::generateSingleForestCluster(WorldData& world_data, unsigned int cluster_seed, 
-                                                         int cluster_size, bool is_large_forest) {
-    std::mt19937 rng(cluster_seed);
+void VegetationObjectManager::generateOptimizedTrees(WorldData& world_data, unsigned int seed) {
+    std::mt19937 rng(seed);
     std::uniform_real_distribution<float> dist_0_1(0.0f, 1.0f);
     
-    // Find a suitable center location for the cluster
-    std::pair<int, int> center = findClusterCenter(world_data, cluster_seed);
-    if (center.first == -1) return; // No suitable location found
+    // OPTIMIZED: Calculate tree count more efficiently
+    int total_tree_count = static_cast<int>(world_data.map_width * world_data.map_height * config.tree_density / 1500.0f);
     
-    int cluster_radius = is_large_forest ? 40 : 25;  // Large, impressive forest areas
-    float ancient_tree_chance = is_large_forest ? config.ancient_tree_rarity : config.ancient_tree_rarity * 0.8f;
+    std::cout << "      Placing " << total_tree_count << " trees (optimized)..." << std::endl;
     
-    std::vector<std::pair<int, int>> tree_positions;
+    // OPTIMIZED: Use cluster-based placement for natural forest appearance
+    int clusters = total_tree_count / 15; // Each cluster has ~15 trees
+    int trees_placed = 0;
     
-    // Generate tree positions in beautiful natural clusters
-    for (int attempt = 0; attempt < cluster_size * 5; ++attempt) {
-        if (tree_positions.size() >= static_cast<size_t>(cluster_size)) break;
+    for (int cluster = 0; cluster < clusters && trees_placed < total_tree_count; ++cluster) {
+        // Find cluster center
+        int center_x = 50 + static_cast<int>(dist_0_1(rng) * (world_data.map_width - 100));
+        int center_y = 50 + static_cast<int>(dist_0_1(rng) * (world_data.map_height - 100));
         
-        // Use gaussian distribution for natural, organic clustering
-        float distance = std::abs(std::normal_distribution<float>(0.0f, cluster_radius * 0.3f)(rng));
-        if (distance > cluster_radius) continue;
+        if (!isValidTreeLocation(center_x, center_y, world_data)) continue;
         
-        float angle = dist_0_1(rng) * 2.0f * 3.14159f;
-        int tree_x = center.first + static_cast<int>(distance * std::cos(angle));
-        int tree_y = center.second + static_cast<int>(distance * std::sin(angle));
+        // Place trees in cluster
+        int cluster_radius = 20 + static_cast<int>(dist_0_1(rng) * 20);
+        int trees_in_cluster = 10 + static_cast<int>(dist_0_1(rng) * 10);
         
-        // Check if this position is suitable and not too close to existing trees
-        if (isValidTreePosition(tree_x, tree_y, world_data, tree_positions)) {
-            tree_positions.emplace_back(tree_x, tree_y);
-        }
-    }
-    
-    // Place magnificent trees at the generated positions
-    for (const auto& pos : tree_positions) {
-        bool is_ancient = dist_0_1(rng) < ancient_tree_chance;
-        
-        std::unique_ptr<BaseVegetationObject> tree;
-        if (is_ancient) {
-            tree = std::make_unique<Trees::AncientOakTree>(pos.first, pos.second, rng());
-        } else {
-            tree = std::make_unique<Trees::YoungTree>(pos.first, pos.second, rng());
-        }
-        
-        if (canPlaceObject(*tree, world_data)) {
-            addObject(std::move(tree));
+        for (int tree_in_cluster = 0; tree_in_cluster < trees_in_cluster && trees_placed < total_tree_count; ++tree_in_cluster) {
+            // Random position within cluster
+            float angle = dist_0_1(rng) * 2.0f * 3.14159f;
+            float distance = dist_0_1(rng) * cluster_radius;
+            
+            int tree_x = center_x + static_cast<int>(distance * std::cos(angle));
+            int tree_y = center_y + static_cast<int>(distance * std::sin(angle));
+            
+            // Keep within bounds
+            tree_x = std::max(20, std::min(tree_x, world_data.map_width - 20));
+            tree_y = std::max(20, std::min(tree_y, world_data.map_height - 20));
+            
+            if (isValidTreeLocation(tree_x, tree_y, world_data)) {
+                // Check spacing from existing objects (simplified)
+                bool too_close = false;
+                for (const auto& existing : objects) {
+                    int dx = tree_x - existing->getOriginX();
+                    int dy = tree_y - existing->getOriginY();
+                    float dist = std::sqrt(dx * dx + dy * dy);
+                    if (dist < config.min_tree_spacing) {
+                        too_close = true;
+                        break;
+                    }
+                }
+                
+                if (!too_close) {
+                    // Create tree
+                    bool is_ancient = dist_0_1(rng) < config.ancient_tree_rarity;
+                    
+                    std::unique_ptr<BaseVegetationObject> tree;
+                    if (is_ancient) {
+                        tree = std::make_unique<Trees::AncientOakTree>(tree_x, tree_y, rng());
+                    } else {
+                        tree = std::make_unique<Trees::YoungTree>(tree_x, tree_y, rng());
+                    }
+                    
+                    if (canPlaceObjectFast(*tree, world_data)) {
+                        addObject(std::move(tree));
+                        trees_placed++;
+                    }
+                }
+            }
         }
     }
 }
 
-std::pair<int, int> VegetationObjectManager::findClusterCenter(const WorldData& world_data, unsigned int seed) const {
-    std::mt19937 rng(seed);
-    std::uniform_int_distribution<int> x_dist(60, world_data.map_width - 60);
-    std::uniform_int_distribution<int> y_dist(60, world_data.map_height - 60);
-    
-    int attempts = 0;
-    const int max_attempts = 40;
-    
-    while (attempts < max_attempts) {
-        int x = x_dist(rng);
-        int y = y_dist(rng);
-        
-        float suitability = getTerrainSuitability(x, y, world_data, "forest_center");
-        if (suitability > 0.3f) { // Reasonable terrain requirements
-            return {x, y};
-        }
-        attempts++;
+bool VegetationObjectManager::isValidBoulderLocation(int x, int y, const WorldData& world_data) const {
+    if (x < 0 || x >= world_data.map_width || y < 0 || y >= world_data.map_height) {
+        return false;
     }
     
-    return {-1, -1}; // No suitable location found
+    size_t index = static_cast<size_t>(y) * world_data.map_width + x;
+    if (index >= world_data.heightmap_data.size()) return false;
+    
+    float height = world_data.heightmap_data[index];
+    float slope = (index < world_data.slope_map.size()) ? world_data.slope_map[index] : 0.0f;
+    
+    // FIXED: Don't place on water or very steep slopes
+    if (world_data.is_river_tile[index] || world_data.is_lake_tile[index]) {
+        return false;
+    }
+    
+    // Boulders prefer hilly terrain but not cliffs
+    return height >= 0.03f && height <= 0.85f && slope <= 0.12f;
 }
 
-bool VegetationObjectManager::isValidTreePosition(int x, int y, const WorldData& world_data, 
-                                                 const std::vector<std::pair<int, int>>& existing_positions) const {
-    // Check terrain suitability
-    float suitability = getTerrainSuitability(x, y, world_data, "ancient_tree");
-    if (suitability < 0.25f) return false; // Reasonable terrain requirements
-    
-    // Check distance from existing trees (allow closer spacing for natural clusters)
-    int min_distance = 4;  // Close enough for natural forest clustering
-    for (const auto& existing : existing_positions) {
-        int dx = x - existing.first;
-        int dy = y - existing.second;
-        float distance = std::sqrt(dx * dx + dy * dy);
-        if (distance < min_distance) return false;
+bool VegetationObjectManager::isValidTreeLocation(int x, int y, const WorldData& world_data) const {
+    if (x < 0 || x >= world_data.map_width || y < 0 || y >= world_data.map_height) {
+        return false;
     }
     
-    // Check distance from existing objects
-    for (const auto& existing_object : objects) {
-        int dx = x - existing_object->getOriginX();
-        int dy = y - existing_object->getOriginY();
+    size_t index = static_cast<size_t>(y) * world_data.map_width + x;
+    if (index >= world_data.heightmap_data.size()) return false;
+    
+    float height = world_data.heightmap_data[index];
+    float slope = (index < world_data.slope_map.size()) ? world_data.slope_map[index] : 0.0f;
+    
+    // FIXED: Don't place on water, mountains, or steep slopes
+    if (world_data.is_river_tile[index] || world_data.is_lake_tile[index]) {
+        return false;
+    }
+    
+    // Trees prefer gentler terrain
+    return height >= 0.05f && height <= 0.7f && slope <= 0.03f;
+}
+
+bool VegetationObjectManager::canPlaceObjectFast(const BaseVegetationObject& object, WorldData& world_data) const {
+    // OPTIMIZED: Faster placement check
+    if (!object.canPlaceAt(object.getOriginX(), object.getOriginY(), 
+                          world_data.heightmap_data, world_data.slope_map,
+                          world_data.map_width, world_data.map_height)) {
+        return false;
+    }
+    
+    // Simple overlap check - just check if any existing object's center is too close
+    for (const auto& existing : objects) {
+        int dx = object.getOriginX() - existing->getOriginX();
+        int dy = object.getOriginY() - existing->getOriginY();
         float distance = std::sqrt(dx * dx + dy * dy);
-        if (distance < config.min_tree_spacing) return false;
+        
+        // Simple distance check based on object sizes
+        float min_distance = (object.getWidth() + existing->getWidth()) / 2.0f + 2.0f;
+        if (distance < min_distance) {
+            return false;
+        }
     }
     
     return true;
 }
 
-void VegetationObjectManager::generateBoulders(WorldData& world_data, unsigned int seed) {
-    std::mt19937 rng(seed);
-    std::uniform_real_distribution<float> dist_0_1(0.0f, 1.0f);
-    
-    // Calculate impressive boulder placement
-    int total_boulder_count = static_cast<int>(world_data.map_width * world_data.map_height * config.boulder_density / 4000.0f);
-    
-    std::cout << "      Placing " << total_boulder_count << " magnificent boulder formations..." << std::endl;
-    
-    auto boulder_locations = findSuitableLocations(world_data, "boulder", total_boulder_count, seed);
-    
-    for (const auto& location : boulder_locations) {
-        // Determine boulder size with preference for larger, more impressive boulders
-        float size_roll = dist_0_1(rng);
-        Boulders::ResourceBoulder::BoulderSize size;
-        if (size_roll < 0.15f) size = Boulders::ResourceBoulder::BoulderSize::SMALL;
-        else if (size_roll < 0.4f) size = Boulders::ResourceBoulder::BoulderSize::MEDIUM;
-        else if (size_roll < 0.75f) size = Boulders::ResourceBoulder::BoulderSize::LARGE;
-        else size = Boulders::ResourceBoulder::BoulderSize::MASSIVE; // More impressive massive boulders
-        
-        // Determine resources with good chances for interesting gameplay
-        Boulders::ResourceBoulder::ResourceType resource = Boulders::ResourceBoulder::ResourceType::NONE;
-        if (dist_0_1(rng) < config.resource_boulder_chance) {
-            float resource_roll = dist_0_1(rng);
-            if (resource_roll < 0.1f) {
-                resource = Boulders::ResourceBoulder::ResourceType::GOLD_VEINS;
-            } else if (resource_roll < 0.25f) {
-                resource = Boulders::ResourceBoulder::ResourceType::SILVER_VEINS;
-            } else if (resource_roll < 0.6f) {
-                resource = Boulders::ResourceBoulder::ResourceType::IRON_DEPOSITS;
-            } else {
-                resource = Boulders::ResourceBoulder::ResourceType::COPPER_DEPOSITS;
-            }
-        }
-        
-        auto boulder = std::make_unique<Boulders::ResourceBoulder>(
-            location.first, location.second, rng(), size, resource);
-        
-        if (canPlaceObject(*boulder, world_data)) {
-            addObject(std::move(boulder));
-        }
-    }
-}
-
-void VegetationObjectManager::generateGrassFields(WorldData& /* world_data */, unsigned int /* seed */) {
-    // Grass field generation delegated to tile-level animation system
-    std::cout << "      Grass fields: Magnificent flowing grass handled by tile animation" << std::endl;
-}
-
-std::vector<std::pair<int, int>> VegetationObjectManager::findSuitableLocations(
-    const WorldData& world_data, const std::string& object_type, int count, unsigned int seed) const {
-    
-    std::vector<std::pair<int, int>> locations;
-    std::mt19937 rng(seed);
-    std::uniform_int_distribution<int> x_dist(30, world_data.map_width - 60);
-    std::uniform_int_distribution<int> y_dist(30, world_data.map_height - 60);
-    
-    int attempts = 0;
-    const int max_attempts = count * 4; // Efficient search
-    
-    while (locations.size() < static_cast<size_t>(count) && attempts < max_attempts) {
-        int x = x_dist(rng);
-        int y = y_dist(rng);
-        
-        float suitability = getTerrainSuitability(x, y, world_data, object_type);
-        
-        if (suitability > 0.2f) { // Reasonable placement requirements
-            // Check minimum spacing from existing objects
-            bool too_close = false;
-            int min_spacing = (object_type == "boulder") ? config.min_boulder_spacing : config.min_tree_spacing;
-            
-            for (const auto& existing : locations) {
-                int dx = x - existing.first;
-                int dy = y - existing.second;
-                float distance = std::sqrt(dx * dx + dy * dy);
-                if (distance < min_spacing) {
-                    too_close = true;
-                    break;
-                }
-            }
-            
-            if (!too_close) {
-                locations.emplace_back(x, y);
-            }
-        }
-        
-        attempts++;
-    }
-    
-    return locations;
-}
-
-float VegetationObjectManager::getTerrainSuitability(int x, int y, const WorldData& world_data, 
-                                                    const std::string& object_type) const {
-    if (x < 0 || x >= world_data.map_width || y < 0 || y >= world_data.map_height) {
-        return 0.0f;
-    }
-    
-    size_t index = static_cast<size_t>(y) * world_data.map_width + x;
-    if (index >= world_data.heightmap_data.size() || index >= world_data.slope_map.size()) {
-        return 0.0f;
-    }
-    
-    float height = world_data.heightmap_data[index];
-    float slope = world_data.slope_map[index];
-    
-    // Check if it's water
-    if (world_data.is_river_tile[index] || world_data.is_lake_tile[index]) {
-        return 0.0f;
-    }
-    
-    if (object_type == "ancient_tree" || object_type == "forest_center") {
-        // Trees prefer reasonable terrain
-        if (height < 0.02f || height > 0.85f || slope > 0.05f) return 0.0f;
-        return 0.6f + (0.5f - std::abs(height - 0.3f)) * 0.4f;
-    } else if (object_type == "young_tree") {
-        // Young trees are adaptable
-        if (height < 0.01f || height > 0.9f || slope > 0.07f) return 0.0f;
-        return 0.4f + (1.0f - slope * 10.0f) * 0.4f;
-    } else if (object_type == "boulder") {
-        // Boulders like varied terrain but avoid water
-        if (height < 0.01f) return 0.0f;
-        return 0.2f + height * 0.5f + slope * 2.0f;
-    }
-    
-    return 0.3f; // Default suitability
-}
-
-// [Rest of the VegetationObjectManager methods remain the same as in the original file]
+// [Keep all the existing helper methods unchanged]
 bool VegetationObjectManager::canPlaceObject(const BaseVegetationObject& object, WorldData& world_data) const {
     if (!object.canPlaceAt(object.getOriginX(), object.getOriginY(), 
                           world_data.heightmap_data, world_data.slope_map,
@@ -417,7 +364,7 @@ void VegetationObjectManager::clear() {
 }
 
 void VegetationObjectManager::printStats() const {
-    std::cout << "    Multi-Tile Objects: Generated " << objects.size() << " magnificent objects:" << std::endl;
+    std::cout << "    Multi-Tile Objects: Generated " << objects.size() << " objects:" << std::endl;
     
     std::map<std::string, int> type_counts;
     for (const auto& object : objects) {

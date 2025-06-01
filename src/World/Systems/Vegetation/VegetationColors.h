@@ -1,4 +1,4 @@
-// File: EmergentKingdoms/src/World/Systems/Vegetation/VegetationColors.h
+// File: EmergentKingdoms/src/World/Systems/Vegetation/MultiTileObjects/VegetationColors.h
 #pragma once
 #include <SFML/Graphics.hpp>
 
@@ -70,7 +70,7 @@ const sf::Color COPPER_DEPOSIT_BG = sf::Color(88, 78, 68);        // Copper-bear
 const sf::Color COPPER_DEPOSIT_GLEAM = sf::Color(165, 122, 98);   // Copper shine
 const sf::Color COPPER_PATINA = sf::Color(108, 138, 118);         // Green patina
 
-// ===== WIND ANIMATION CHARACTERS FOR FLOWING GRASS =====
+// ===== TOP-DOWN WIND ANIMATION CHARACTERS FOR FLOWING GRASS =====
 const char GRASS_UPRIGHT = '|';                                   // Still grass
 const char GRASS_LEAN_RIGHT = '/';                                // Wind from left
 const char GRASS_LEAN_LEFT = '\\';                               // Wind from right
@@ -78,30 +78,30 @@ const char GRASS_BENT_STRONG = '_';                               // Strong wind
 const char GRASS_WAVE_CREST = '^';                                // Wave peak
 const char GRASS_WAVE_TROUGH = 'v';                               // Wave valley
 
-// ===== TREE CHARACTERS FOR BEAUTIFUL TOP-DOWN VIEW =====
-const char ANCIENT_OAK = 'T';                                     // Majestic ancient oak
-const char NOBLE_PINE = 'A';                                      // Tall noble pine  
-const char SILVER_BIRCH = '!';                                    // Elegant slender birch
-const char WEEPING_WILLOW = 'W';                                  // Graceful drooping willow
-const char YOUNG_TREE = 'Y';                                      // Growing young trees
-const char TREE_GROVE = '%';                                      // Tree cluster
+// ===== TOP-DOWN TREE CHARACTERS (What trees look like from above) =====
+const char ANCIENT_OAK = 'T';                                     // Large oak canopy from above
+const char NOBLE_PINE = 'A';                                      // Coniferous canopy from above  
+const char SILVER_BIRCH = '!';                                    // Slender birch canopy from above
+const char WEEPING_WILLOW = 'W';                                  // Drooping willow canopy from above
+const char YOUNG_TREE = 'Y';                                      // Small tree canopy from above
+const char TREE_GROVE = '%';                                      // Multiple tree canopies
 
-// ===== LUSH VEGETATION CHARACTERS =====
-const char DENSE_THICKET = '#';                                   // Impenetrable undergrowth
-const char BERRY_BUSH = 'o';                                      // Berry-laden bushes
-const char WILD_ROSES = '@';                                      // Blooming rose bushes
-const char WILDFLOWERS = '*';                                     // Scattered wildflowers
-const char ROYAL_LILY = '&';                                      // Elegant royal lilies
-const char HERB_PATCH = '~';                                      // Useful herb patches
+// ===== TOP-DOWN VEGETATION CHARACTERS (View from directly above) =====
+const char DENSE_THICKET = '#';                                   // Dense undergrowth from above
+const char BERRY_BUSH = 'o';                                      // Round berry bush from above
+const char WILD_ROSES = '@';                                      // Rose bush cluster from above
+const char WILDFLOWERS = '*';                                     // Scattered flower clusters
+const char ROYAL_LILY = '&';                                      // Elegant lily patches
+const char HERB_PATCH = '~';                                      // Herb garden areas
 
-// ===== MAGNIFICENT ROCK & RESOURCE CHARACTERS =====
-const char MOSSY_BOULDER = 'O';                                   // Large moss-covered boulder
-const char STANDING_STONE = 'I';                                  // Ancient monolithic stone
-const char ROCK_OUTCROP = '.';                                    // Small rock formation
-const char GOLD_VEIN = '$';                                       // Gleaming gold deposit
-const char SILVER_LODE = '=';                                     // Lustrous silver lode  
-const char IRON_ORE = '#';                                        // Solid iron ore
-const char COPPER_DEPOSIT = '+';                                  // Rich copper deposit
+// ===== TOP-DOWN ROCK & RESOURCE CHARACTERS (Aerial view) =====
+const char MOSSY_BOULDER = 'O';                                   // Large boulder from above
+const char STANDING_STONE = 'I';                                  // Monolithic stone from above
+const char ROCK_OUTCROP = '.';                                    // Small rock formation from above
+const char GOLD_VEIN = '$';                                       // Gold vein exposure
+const char SILVER_LODE = '=';                                     // Silver lode exposure  
+const char IRON_ORE = '#';                                        // Iron ore outcrop
+const char COPPER_DEPOSIT = '+';                                  // Copper deposit exposure
 
 } // namespace Colors
 } // namespace Vegetation

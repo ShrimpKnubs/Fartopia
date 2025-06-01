@@ -13,8 +13,9 @@ namespace Vegetation {
 namespace MultiTileObjects {
 
 /**
- * Manages all multi-tile vegetation objects in the world
- * Handles placement, collision detection, rendering, and animation
+ * OPTIMIZED Vegetation Object Manager
+ * Fast generation of large trees, boulders, and grass fields
+ * Uses grid-based placement and simplified algorithms for speed
  */
 class VegetationObjectManager {
 public:
@@ -37,7 +38,6 @@ public:
     
     // Object management
     void addObject(std::unique_ptr<BaseVegetationObject> object);
-    void removeObjectAt(int world_x, int world_y);
     
     // Statistics and debugging
     size_t getObjectCount() const { return objects.size(); }
@@ -54,68 +54,40 @@ private:
     std::unordered_map<uint64_t, SpatialCell> spatial_index;
     static constexpr int SPATIAL_CELL_SIZE = 32; // Tiles per spatial cell
     
-    // Generation parameters
+    // OPTIMIZED Generation parameters
     struct GenerationConfig {
-        // Tree generation - UPDATED for better clustering
-        float tree_density = 0.05f;        // Reduced for clusters
-        float ancient_tree_rarity = 0.15f;  // Higher chance in forests
-        int min_tree_spacing = 4;           // Closer spacing for clusters
+        // Tree generation - OPTIMIZED for performance and density
+        float tree_density = 0.4f;         // High density for lush forests
+        float ancient_tree_rarity = 0.3f;  // Good mix of ancient/young
+        int min_tree_spacing = 8;          // Reasonable spacing for performance
         
-        // Boulder generation  
-        float boulder_density = 0.02f;      // Reduced density
-        float large_boulder_rarity = 0.3f;  // More large boulders
-        int min_boulder_spacing = 15;       // Wider spacing
+        // Boulder generation - OPTIMIZED  
+        float boulder_density = 0.15f;     // More impressive formations
+        float large_boulder_rarity = 0.35f; // Good mix of sizes
+        int min_boulder_spacing = 15;      // Reasonable spacing
         
         // Resource generation
-        float resource_boulder_chance = 0.3f;
-        float gold_vein_rarity = 0.05f;
-        float silver_vein_rarity = 0.08f;
-        
-        // Grass field generation
-        float grass_field_density = 0.25f;
-        int min_grass_field_size = 20;
-        int max_grass_field_size = 80;
+        float resource_boulder_chance = 0.5f; // Good resource opportunities
     };
     GenerationConfig config;
     
-    // Generation methods - UPDATED for clustering
-    void generateForestClusters(WorldData& world_data, unsigned int seed); // NEW: Main forest generation
-    void generateSingleForestCluster(WorldData& world_data, unsigned int cluster_seed, 
-                                    int cluster_size, bool is_large_forest); // NEW: Individual cluster
-    void generateTrees(WorldData& world_data, unsigned int seed);         // UPDATED: Scattered trees only
-    void generateBoulders(WorldData& world_data, unsigned int seed);
-    void generateGrassFields(WorldData& world_data, unsigned int seed);
+    // OPTIMIZED Generation methods - Fast algorithms
+    void generateOptimizedBoulders(WorldData& world_data, unsigned int seed);
+    void generateOptimizedTrees(WorldData& world_data, unsigned int seed);
     
-    // Placement validation
-    bool canPlaceObject(const BaseVegetationObject& object, 
-                       WorldData& world_data) const;
+    // OPTIMIZED Placement validation - Fast checks
+    bool canPlaceObjectFast(const BaseVegetationObject& object, WorldData& world_data) const;
+    bool isValidBoulderLocation(int x, int y, const WorldData& world_data) const;
+    bool isValidTreeLocation(int x, int y, const WorldData& world_data) const;
+    
+    // Original placement validation (for fallback)
+    bool canPlaceObject(const BaseVegetationObject& object, WorldData& world_data) const;
     bool hasCollision(const BaseVegetationObject& object) const;
-    
-    // Forest clustering helpers - NEW
-    std::pair<int, int> findClusterCenter(const WorldData& world_data, unsigned int seed) const;
-    bool isValidTreePosition(int x, int y, const WorldData& world_data, 
-                           const std::vector<std::pair<int, int>>& existing_positions) const;
     
     // Spatial indexing
     uint64_t getSpatialKey(int world_x, int world_y) const;
     void addToSpatialIndex(BaseVegetationObject* object);
-    void removeFromSpatialIndex(BaseVegetationObject* object);
     void rebuildSpatialIndex();
-    
-    // Object factory methods
-    std::unique_ptr<BaseVegetationObject> createRandomTree(int x, int y, unsigned int seed,
-                                                          const WorldData& world_data) const;
-    std::unique_ptr<BaseVegetationObject> createRandomBoulder(int x, int y, unsigned int seed,
-                                                            const WorldData& world_data) const;
-    std::unique_ptr<BaseVegetationObject> createGrassField(int x, int y, int width, int height,
-                                                          unsigned int seed) const;
-    
-    // Utility methods
-    float getTerrainSuitability(int x, int y, const WorldData& world_data, 
-                               const std::string& object_type) const;
-    std::vector<std::pair<int, int>> findSuitableLocations(const WorldData& world_data,
-                                                          const std::string& object_type,
-                                                          int count, unsigned int seed) const;
 };
 
 } // namespace MultiTileObjects

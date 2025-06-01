@@ -180,36 +180,36 @@ void AncientOakTree::generateRootFlare() {
 }
 
 char AncientOakTree::selectBushyCanopyCharacter(int x, int y, float density, float distance_factor) const {
-    // Characters that create a dense, bushy appearance from above
+    // TOP-DOWN VIEW: Characters that look like foliage from above
     float noise = getProceduralNoise(x, y, 0.4f);
     float effective_density = density * distance_factor;
     
     if (effective_density > 0.9f) {
-        // Very dense core - solid foliage
-        if (noise < 0.6f) return '@';      // Very dense leaves
-        else if (noise < 0.85f) return '#'; // Dense foliage
-        else return '%';                   // Thick canopy
+        // Very dense core - solid foliage patches from above
+        if (noise < 0.4f) return '@';      // Dense leaf clusters
+        else if (noise < 0.7f) return '%'; // Thick foliage patches  
+        else return '#';                   // Very dense areas
     } else if (effective_density > 0.7f) {
-        // Dense areas
-        if (noise < 0.5f) return '#';      // Dense foliage
-        else if (noise < 0.8f) return '%'; // Medium-dense
-        else return '*';                   // Leaf clusters
+        // Dense areas - visible individual leaf clusters
+        if (noise < 0.4f) return '%';      // Foliage patches
+        else if (noise < 0.7f) return '*'; // Leaf clusters 
+        else return 'o';                   // Small dense spots
     } else {
-        // Lighter canopy edges
-        if (noise < 0.4f) return '%';      // Medium foliage
-        else if (noise < 0.7f) return '*'; // Light clusters
-        else return '.';                   // Sparse edges
+        // Lighter canopy edges - scattered leaves from above
+        if (noise < 0.5f) return '*';      // Scattered leaves
+        else if (noise < 0.8f) return '.'; // Light foliage
+        else return ',';                   // Very light areas
     }
 }
 
 char AncientOakTree::selectTrunkCharacter(int x, int y) const {
-    std::string trunk_chars = "||\\/#";
+    // TOP-DOWN VIEW: What trunk looks like from directly above
     float noise = getProceduralNoise(x, y, 0.5f);
     
-    if (noise < 0.5f) return '|';       // Vertical bark lines
-    else if (noise < 0.7f) return '\\'; // Diagonal bark texture  
-    else if (noise < 0.85f) return '/'; // Other diagonal
-    else return '#';                    // Rough bark sections
+    if (noise < 0.3f) return '#';       // Solid bark sections
+    else if (noise < 0.6f) return 'O'; // Round trunk sections
+    else if (noise < 0.8f) return 'o'; // Smaller trunk parts
+    else return '.';                    // Bark texture details
 }
 
 sf::Color AncientOakTree::getLushLeafColor(int x, int y, float distance_factor) const {
@@ -345,8 +345,11 @@ bool AncientOakTree::canPlaceAt(int world_x, int world_y,
 }
 
 bool AncientOakTree::isValidTerrain(float height, float slope) const {
-    // Ancient oaks prefer mid-elevation, gentle slopes
-    return height >= 0.05f && height <= 0.7f && slope <= 0.03f;
+    // FIXED: Ancient oaks should NOT spawn on water, mountains, or very steep slopes
+    // They prefer mid-elevation, gentle slopes on LAND only
+    return height >= 0.05f &&           // Above water level
+           height <= 0.6f &&            // Below mountain level 
+           slope <= 0.025f;             // Gentle slopes only
 }
 
 } // namespace Trees
