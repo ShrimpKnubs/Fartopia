@@ -41,7 +41,7 @@ if "%commit_msg%"=="" set commit_msg=Complete repository update - %date% %time%
 git commit -m "%commit_msg%"
 
 echo Step 4: Pushing to GitHub...
-git push origin master --force
+git push origin main --force
 
 echo.
 echo ==========================================
